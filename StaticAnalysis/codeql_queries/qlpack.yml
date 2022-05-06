@@ -1,0 +1,6 @@
+# This is an automatically generated file.
+
+name: quick-query
+version: 1.0.0
+libraryPathDependencies:
+  - codeql-cpp

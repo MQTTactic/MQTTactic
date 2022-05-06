@@ -1,0 +1,11 @@
+[package]
+name = "SE"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+boolector = "0.4.2"
+llvm-ir = {path = "/tools/llvm-ir"}
+haybale = {path = "/tools/haybale",features = ["llvm-9"]}
