@@ -1,9 +1,11 @@
 import re
 import os
 import time
+
 actions = []
 with open('./build/result.txt', 'r') as f1:
     content = f1.read()
+    # pan: wrote mosquitto.pml1.trail
     trailFiles = re.findall('pan: wrote (.*?\.trail)\n', content)
     dir = f'./result_{time.time()}'
     if (trailFiles != []):12
