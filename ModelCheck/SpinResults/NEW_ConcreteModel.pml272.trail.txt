@@ -1,0 +1,141 @@
+              SUBSCRIBER_1: send 'CONNCET' with {username:`1`, password:`1`, clientId:`1`}
+              Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47
+              with cleanStart = true
+              SUBSCRIBER_1: connected
+              SUBSCRIBER_1: send 'SUBSCRIBE'
+              Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14
+              SUBSCRIBER_1: subscribed
+              SUBSCRIBER_1: send 'DISCONNECT'
+              Enter function handle__disconnect_Type_0_Type_1
+              SUBSCRIBER_1: disconnected
+          PUBLISHER_0: send 'CONNCET' with {username:`0`, password:`0`, clientId:`0`}
+          Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47
+          with cleanStart = true
+          PUBLISHER_0: connected
+          Enter function handle__publish_qos1_Type_0
+          PUBLISHER_0: publish a QoS1 message
+          Message to subscribers: Topic = 0; QoS = 1; FROM = SESSION_0; 
+          Enter function ACL_revoke_Type_0
+          PUBLISHER_0: revoke PUBLISHACL
+              SUBSCRIBER_1: send 'CONNCET' with {username:`1`, password:`1`, clientId:`1`}
+              Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47
+              with cleanStart = false
+              Message Delivery: Topic = 0; QoS = 1; FROM = SESSION_0; TO = SESSION_1
+spin: ConcreteModel.pml:956, Error: assertion violated
+spin: text of failed assertion: assert((flag==1))
+spin: trail ends after 116 steps
+#processes: 3
+		BadDisconnect = 0
+		Clients[0].username = 0
+		Clients[0].password = 0
+		Clients[0].clientId = 0
+		Clients[0].connected = 1
+		Clients[0].acl = 5
+		Clients[0].aclTruth = 5
+		Clients[1].username = 1
+		Clients[1].password = 1
+		Clients[1].clientId = 1
+		Clients[1].connected = 0
+		Clients[1].acl = 7
+		Clients[1].aclTruth = 7
+		Clients[2].username = 2
+		Clients[2].password = 2
+		Clients[2].clientId = 0
+		Clients[2].connected = 0
+		Clients[2].acl = 4
+		Clients[2].aclTruth = 4
+		Sessions[0].clientId = 0
+		Sessions[0].clientIndex = 0
+		Sessions[0].cleanStart = 1
+		Sessions[0].connected = 1
+		Sessions[0].messages[0].topic = -1
+		Sessions[0].messages[0].QoS = -1
+		Sessions[0].messages[0].srcClientId = -1
+		Sessions[0].messages[0].srcClientIndex = -1
+		Sessions[0].messages[0].origin = -1
+		Sessions[0].messages[0].retained = 0
+		Sessions[0].messages[1].topic = -1
+		Sessions[0].messages[1].QoS = -1
+		Sessions[0].messages[1].srcClientId = -1
+		Sessions[0].messages[1].srcClientIndex = -1
+		Sessions[0].messages[1].origin = -1
+		Sessions[0].messages[1].retained = 0
+		Sessions[0].messages[2].topic = -1
+		Sessions[0].messages[2].QoS = -1
+		Sessions[0].messages[2].srcClientId = -1
+		Sessions[0].messages[2].srcClientIndex = -1
+		Sessions[0].messages[2].origin = -1
+		Sessions[0].messages[2].retained = 0
+		Sessions[0].messages[3].topic = -1
+		Sessions[0].messages[3].QoS = -1
+		Sessions[0].messages[3].srcClientId = -1
+		Sessions[0].messages[3].srcClientIndex = -1
+		Sessions[0].messages[3].origin = -1
+		Sessions[0].messages[3].retained = 0
+		Sessions[0].messages[4].topic = -1
+		Sessions[0].messages[4].QoS = -1
+		Sessions[0].messages[4].srcClientId = -1
+		Sessions[0].messages[4].srcClientIndex = -1
+		Sessions[0].messages[4].origin = -1
+		Sessions[0].messages[4].retained = 0
+		Sessions[0].messagesLen = 0
+		Sessions[0].subscriptions[0].topic = -1
+		Sessions[0].subscriptionsLen = 0
+		Sessions[0].willmessage.topic = 0
+		Sessions[0].willmessage.QoS = 0
+		Sessions[0].willmessage.srcClientId = 0
+		Sessions[0].willmessage.srcClientIndex = 0
+		Sessions[0].willmessage.origin = 1
+		Sessions[0].willmessage.retained = 0
+		Sessions[1].clientId = 1
+		Sessions[1].clientIndex = 1
+		Sessions[1].cleanStart = 0
+		Sessions[1].connected = 0
+		Sessions[1].messages[0].topic = 0
+		Sessions[1].messages[0].QoS = 1
+		Sessions[1].messages[0].srcClientId = 0
+		Sessions[1].messages[0].srcClientIndex = 0
+		Sessions[1].messages[0].origin = 0
+		Sessions[1].messages[0].retained = 0
+		Sessions[1].messages[1].topic = -1
+		Sessions[1].messages[1].QoS = -1
+		Sessions[1].messages[1].srcClientId = -1
+		Sessions[1].messages[1].srcClientIndex = -1
+		Sessions[1].messages[1].origin = -1
+		Sessions[1].messages[1].retained = 0
+		Sessions[1].messages[2].topic = -1
+		Sessions[1].messages[2].QoS = -1
+		Sessions[1].messages[2].srcClientId = -1
+		Sessions[1].messages[2].srcClientIndex = -1
+		Sessions[1].messages[2].origin = -1
+		Sessions[1].messages[2].retained = 0
+		Sessions[1].messages[3].topic = -1
+		Sessions[1].messages[3].QoS = -1
+		Sessions[1].messages[3].srcClientId = -1
+		Sessions[1].messages[3].srcClientIndex = -1
+		Sessions[1].messages[3].origin = -1
+		Sessions[1].messages[3].retained = 0
+		Sessions[1].messages[4].topic = -1
+		Sessions[1].messages[4].QoS = -1
+		Sessions[1].messages[4].srcClientId = -1
+		Sessions[1].messages[4].srcClientIndex = -1
+		Sessions[1].messages[4].origin = -1
+		Sessions[1].messages[4].retained = 0
+		Sessions[1].messagesLen = 1
+		Sessions[1].subscriptions[0].topic = 0
+		Sessions[1].subscriptionsLen = 1
+		Sessions[1].willmessage.topic = -1
+		Sessions[1].willmessage.QoS = -1
+		Sessions[1].willmessage.srcClientId = -1
+		Sessions[1].willmessage.srcClientIndex = -1
+		Sessions[1].willmessage.origin = -1
+		Sessions[1].willmessage.retained = 0
+		RetainedMessages.topic = -1
+		RetainedMessages.QoS = -1
+		RetainedMessages.srcClientId = -1
+		RetainedMessages.srcClientIndex = -1
+		RetainedMessages.retained = 1
+116:	proc  2 (ProcessSubscriber:1) ConcreteModel.pml:671 (state 281)
+116:	proc  1 (ProcessPublisher:1) ConcreteModel.pml:1000 (state 1275)
+116:	proc  0 (:init::1) ConcreteModel.pml:1142 (state 26) <valid end state>
+3 processes created

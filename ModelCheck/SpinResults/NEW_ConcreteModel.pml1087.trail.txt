@@ -1,0 +1,178 @@
+              SUBSCRIBER_1: send 'CONNCET' with {username:`1`, password:`1`, clientId:`1`}
+              Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44
+              with cleanStart = true
+              SUBSCRIBER_1: connected
+              SUBSCRIBER_1: send 'SUBSCRIBE'
+              Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14
+              SUBSCRIBER_1: subscribed
+              SUBSCRIBER_1: send 'DISCONNECT'
+              Enter function handle__disconnect_Type_0
+              SUBSCRIBER_1: disconnected
+          PUBLISHER_0: send 'CONNCET' with {username:`0`, password:`0`, clientId:`0`}
+          Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44
+          with cleanStart = true
+          PUBLISHER_0: connected
+              SUBSCRIBER_1: send 'CONNCET' with {username:`1`, password:`1`, clientId:`1`}
+              Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44
+              with cleanStart = true
+              SUBSCRIBER_1: connected
+              SUBSCRIBER_1: send 'SUBSCRIBE'
+              Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14
+              SUBSCRIBER_1: subscribed
+          Enter function handle__publish_qos2_Type_3_
+          PUBLISHER_0: publish a QoS2 message
+                  PUBLISHER_2: send 'CONNCET' with {username:`2`, password:`2`, clientId:`0`}
+                  PUBLISHER_2: A client already online with the same clientId, DISCONNECT the old client.
+                  Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47
+                  with cleanStart = false
+                  PUBLISHER_2: connected
+          PUBLISHER_0: send 'CONNCET' with {username:`0`, password:`0`, clientId:`0`}
+          PUBLISHER_0: A client already online with the same clientId, DISCONNECT the old client.
+          Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29
+          Message to subscribers: Topic = 0; QoS = 0; FROM = SESSION_0; 
+          Message Delivery: Topic = 0; QoS = 0; FROM = SESSION_0; TO = SESSION_1
+          with cleanStart = false
+          PUBLISHER_0: connected
+          PUBLISHER_0: send 'PUBREL'
+          Enter function handle__pubrel_Type_0
+          Message to subscribers: Topic = 0; QoS = 2; FROM = SESSION_0; 
+          Message Delivery: Topic = 0; QoS = 2; FROM = SESSION_0; TO = SESSION_1
+          PUBLISHER_0: pubrel complete
+                  PUBLISHER_2: send 'CONNCET' with {username:`2`, password:`2`, clientId:`0`}
+                  PUBLISHER_2: A client already online with the same clientId, DISCONNECT the old client.
+                  Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44
+                  with cleanStart = true
+                  PUBLISHER_2: connected
+          PUBLISHER_0: send 'CONNCET' with {username:`0`, password:`0`, clientId:`0`}
+          PUBLISHER_0: A client already online with the same clientId, DISCONNECT the old client.
+          Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25
+          Message to subscribers: Topic = 0; QoS = 0; FROM = SESSION_0; 
+          Message Delivery: Topic = 0; QoS = 0; FROM = SESSION_0; TO = SESSION_1
+          with cleanStart = true
+          PUBLISHER_0: connected
+          Enter function ACL_revoke_Type_0
+          PUBLISHER_0: revoke PUBLISHACL
+                  PUBLISHER_2: send 'CONNCET' with {username:`2`, password:`2`, clientId:`0`}
+                  PUBLISHER_2: A client already online with the same clientId, DISCONNECT the old client.
+                  Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25
+                  Message to subscribers: Topic = 0; QoS = 0; FROM = SESSION_0; 
+                  Message Delivery: Topic = 0; QoS = 0; FROM = SESSION_0; TO = SESSION_1
+spin: ConcreteModel.pml:1046, Error: assertion violated
+spin: text of failed assertion: assert((flag==1))
+spin: trail ends after 318 steps
+#processes: 4
+		BadDisconnect = 0
+		Clients[0].username = 0
+		Clients[0].password = 0
+		Clients[0].clientId = 0
+		Clients[0].connected = 0
+		Clients[0].acl = 5
+		Clients[0].aclTruth = 1
+		Clients[1].username = 1
+		Clients[1].password = 1
+		Clients[1].clientId = 1
+		Clients[1].connected = 1
+		Clients[1].acl = 7
+		Clients[1].aclTruth = 3
+		Clients[2].username = 2
+		Clients[2].password = 2
+		Clients[2].clientId = 0
+		Clients[2].connected = 0
+		Clients[2].acl = 1
+		Clients[2].aclTruth = 1
+		Sessions[0].clientId = 0
+		Sessions[0].clientIndex = 2
+		Sessions[0].cleanStart = 1
+		Sessions[0].connected = 1
+		Sessions[0].messages[0].topic = -1
+		Sessions[0].messages[0].QoS = -1
+		Sessions[0].messages[0].srcClientId = -1
+		Sessions[0].messages[0].srcClientIndex = -1
+		Sessions[0].messages[0].origin = -1
+		Sessions[0].messages[0].retained = 0
+		Sessions[0].messages[1].topic = -1
+		Sessions[0].messages[1].QoS = -1
+		Sessions[0].messages[1].srcClientId = -1
+		Sessions[0].messages[1].srcClientIndex = -1
+		Sessions[0].messages[1].origin = -1
+		Sessions[0].messages[1].retained = 0
+		Sessions[0].messages[2].topic = -1
+		Sessions[0].messages[2].QoS = -1
+		Sessions[0].messages[2].srcClientId = -1
+		Sessions[0].messages[2].srcClientIndex = -1
+		Sessions[0].messages[2].origin = -1
+		Sessions[0].messages[2].retained = 0
+		Sessions[0].messages[3].topic = -1
+		Sessions[0].messages[3].QoS = -1
+		Sessions[0].messages[3].srcClientId = -1
+		Sessions[0].messages[3].srcClientIndex = -1
+		Sessions[0].messages[3].origin = -1
+		Sessions[0].messages[3].retained = 0
+		Sessions[0].messages[4].topic = -1
+		Sessions[0].messages[4].QoS = -1
+		Sessions[0].messages[4].srcClientId = -1
+		Sessions[0].messages[4].srcClientIndex = -1
+		Sessions[0].messages[4].origin = -1
+		Sessions[0].messages[4].retained = 0
+		Sessions[0].messagesLen = 0
+		Sessions[0].subscriptions[0].topic = -1
+		Sessions[0].subscriptionsLen = 0
+		Sessions[0].willmessage.topic = 0
+		Sessions[0].willmessage.QoS = 0
+		Sessions[0].willmessage.srcClientId = 0
+		Sessions[0].willmessage.srcClientIndex = 0
+		Sessions[0].willmessage.origin = 1
+		Sessions[0].willmessage.retained = 0
+		Sessions[1].clientId = 1
+		Sessions[1].clientIndex = 1
+		Sessions[1].cleanStart = 1
+		Sessions[1].connected = 1
+		Sessions[1].messages[0].topic = -1
+		Sessions[1].messages[0].QoS = -1
+		Sessions[1].messages[0].srcClientId = -1
+		Sessions[1].messages[0].srcClientIndex = -1
+		Sessions[1].messages[0].origin = -1
+		Sessions[1].messages[0].retained = 0
+		Sessions[1].messages[1].topic = -1
+		Sessions[1].messages[1].QoS = -1
+		Sessions[1].messages[1].srcClientId = -1
+		Sessions[1].messages[1].srcClientIndex = -1
+		Sessions[1].messages[1].origin = -1
+		Sessions[1].messages[1].retained = 0
+		Sessions[1].messages[2].topic = -1
+		Sessions[1].messages[2].QoS = -1
+		Sessions[1].messages[2].srcClientId = -1
+		Sessions[1].messages[2].srcClientIndex = -1
+		Sessions[1].messages[2].origin = -1
+		Sessions[1].messages[2].retained = 0
+		Sessions[1].messages[3].topic = -1
+		Sessions[1].messages[3].QoS = -1
+		Sessions[1].messages[3].srcClientId = -1
+		Sessions[1].messages[3].srcClientIndex = -1
+		Sessions[1].messages[3].origin = -1
+		Sessions[1].messages[3].retained = 0
+		Sessions[1].messages[4].topic = -1
+		Sessions[1].messages[4].QoS = -1
+		Sessions[1].messages[4].srcClientId = -1
+		Sessions[1].messages[4].srcClientIndex = -1
+		Sessions[1].messages[4].origin = -1
+		Sessions[1].messages[4].retained = 0
+		Sessions[1].messagesLen = 0
+		Sessions[1].subscriptions[0].topic = 0
+		Sessions[1].subscriptionsLen = 1
+		Sessions[1].willmessage.topic = -1
+		Sessions[1].willmessage.QoS = -1
+		Sessions[1].willmessage.srcClientId = -1
+		Sessions[1].willmessage.srcClientIndex = -1
+		Sessions[1].willmessage.origin = -1
+		Sessions[1].willmessage.retained = 0
+		RetainedMessages.topic = -1
+		RetainedMessages.QoS = -1
+		RetainedMessages.srcClientId = -1
+		RetainedMessages.srcClientIndex = -1
+		RetainedMessages.retained = 1
+318:	proc  3 (ProcessPublisher2:1) ConcreteModel.pml:463 (state 157)
+318:	proc  2 (ProcessSubscriber:1) ConcreteModel.pml:1180 (state 753)
+318:	proc  1 (ProcessPublisher:1) ConcreteModel.pml:1090 (state 1470)
+318:	proc  0 (:init::1) ConcreteModel.pml:1232 (state 27) <valid end state>
+4 processes created
