@@ -2,13 +2,21 @@
 
 #define PUBCLIENTID_0 0
 #define SUBCLIENTID_1 1
+
+
 #define MAXCLIENTS 3
 #define MAXMESSAGES 5
 #define MAXSUBSCRIPTIONS 1
 #define MAXSESSIONS 2
+
+
 #define SUBSCRIBEACL 1
 #define PUBLISHACL 2
 #define READACL 4
+#define STOREACL 8
+#define LOADACL 16
+
+
 
 typedef Message{
     short topic = -1; 
@@ -19,6 +27,8 @@ typedef Message{
     bool retained = false;
 }
 
+
+
 typedef RetainedMessage{
     short topic = -1; 
     short QoS = -1; 
@@ -26,50 +36,62 @@ typedef RetainedMessage{
     short srcClientIndex = -1;
     bool retained = true;
 }
+
+
 typedef Subscription{
     short topic = -1;
 }
+
+
 
 typedef Session{
     short clientId = -1;
     short clientIndex = -1;
     bool cleanStart;
     bool connected = false;
+
     
     Message messages[MAXMESSAGES];
     short messagesLen = 0;
     Subscription subscriptions[MAXSUBSCRIPTIONS];
     short subscriptionsLen = 0;
+
     Message willmessage;
+    
 }
+
 
 typedef Client{
     short username;
     short password;
     short clientId;
     bool connected = false;
-    
 
-    short acl = PUBLISHACL + SUBSCRIBEACL + READACL;
-    short aclTruth = PUBLISHACL + SUBSCRIBEACL + READACL;
+    short acl = PUBLISHACL + SUBSCRIBEACL;
+    short aclTruth = PUBLISHACL + SUBSCRIBEACL;
     
 }
+
+
+
+
+
 bool BadDisconnect;
 Client Clients[MAXCLIENTS];
 Session Sessions[MAXSESSIONS];
 
-
-
 RetainedMessage RetainedMessages;
 
+
+
+/******************** CONNECT *************************/
 inline CONNECT_entry_point(index){
     atomic{
-        
-
         
         CONNECT_auth_success(index);
     }
 }
+
 inline CONNECT_auth_success(index){
     atomic{
         localClientId = Clients[index].clientId;
@@ -84,17 +106,20 @@ inline CONNECT_auth_success(index){
         if
             :: CONNECT_cleanStart_true(index);
             :: CONNECT_cleanStart_false(index);
+                 
         fi;
     }
 }
+
 inline CONNECT_cleanStart_true(index){
     atomic{
 if
-:: handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47(index);
-:: handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29(index);
+:: handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44(index);
+:: handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25(index);
 fi;
     }
 }
+
 inline CONNECT_cleanStart_false(index){
     atomic{
 if
@@ -103,6 +128,8 @@ if
 fi;
     }
 }
+
+
 inline CONNECT_will_message(index){
     atomic{
         localClientId = Clients[index].clientId;
@@ -117,9 +144,11 @@ inline CONNECT_will_message(index){
                 Sessions[localClientId].willmessage.origin = 1;
             :: else -> skip;
         fi;
+
         CONNECT_end(index);
     }
 }
+
 inline CONNECT_end(index){
     atomic{
         localClientId = Clients[index].clientId;
@@ -128,6 +157,8 @@ inline CONNECT_end(index){
     }
 }
 
+
+/******************** PUBLISH *************************/
 inline PUBLISH_entry_point(index, t){
     atomic{
         PUBLISH(index, t);
@@ -142,6 +173,7 @@ inline PUBLISH(index, t){
             :: (Sessions[localClientId].messagesLen < MAXMESSAGES) -> PUBLISH_QoS2_step2(index, t);
             :: PUBLISH_retained_QoS0_step2(index, t);
         fi;
+
     }
 }
 inline PUBLISH_QoS0_step2(index, t){
@@ -151,6 +183,7 @@ if
 fi;
     }
 }
+
 inline PUBLISH_QoS1_step2(index, t){
     atomic{
 if
@@ -158,13 +191,18 @@ if
 fi;
     }
 }
+
 inline PUBLISH_QoS2_step2(index, t){
     atomic{
 if
 :: handle__publish_qos2_Type_2(index, t);
+:: handle__publish_qos2_Type_3_(index, t);
+:: handle__publish_qos2_Type_4(index, t);
 fi;
     }
 }
+
+
 inline PUBLISH_retained_QoS0_step2(index, t){
     atomic{
 if
@@ -172,6 +210,9 @@ if
 fi;
     }
 }
+
+
+
 inline PUBLISH_end(){
     atomic{
         skip;
@@ -179,6 +220,7 @@ inline PUBLISH_end(){
 }
 
 
+/******************** PUBREL *************************/
 
 inline PUBREL_entry_point(index){
     atomic{
@@ -192,12 +234,15 @@ if
 fi;
     }
 }
+
 inline PUBREL_end(index){
     atomic{
         skip;
     }
 }
 
+
+/******************** SUBSCRIBE *************************/
 inline SUBSCRIBE_entry_point(index, t){
     atomic{
         SUBSCRIBE(index, t);
@@ -216,6 +261,8 @@ inline SUBSCRIBE_end(index, t){
     }
 }
 
+
+/******************** UNSUBSCRIBE *************************/
 inline UNSUBSCRIBE_entry_point(index, t){
     atomic{
         UNSUBSCRIBE(index, t);
@@ -234,6 +281,8 @@ inline UNSUBSCRIBE_end(index, t){
     }
 }
 
+
+/******************** DISCONNECT *************************/
 inline DISCONNECT_entry_point(index){
     atomic{
         DISCONNECT(index);
@@ -242,7 +291,8 @@ inline DISCONNECT_entry_point(index){
 inline DISCONNECT(index){
     atomic{
 if
-:: handle__disconnect_Type_0_Type_1(index);
+:: handle__disconnect_Type_0(index);
+:: handle__disconnect_Type_1(index);
 fi;
     }
 }
@@ -252,6 +302,9 @@ inline DISCONNECT_end(){
     }
 }
 
+
+
+/******************** ACL revoke *************************/
 inline ACL_revoke(index, revokeAcl){
     atomic{
 if
@@ -260,6 +313,10 @@ fi;
     }
 }
 
+
+
+
+/******************** ACL checker *************************/
 inline Authentication_UserPass_allowed(){
     atomic{
         skip;
@@ -268,27 +325,7 @@ inline Authentication_UserPass_allowed(){
 inline Authorization_subscribe_allowed(index, topic, rt){
     atomic{
         if
-            :: (Clients[index].acl != 0 && Clients[index].acl != 2 && Clients[index].acl != 4 && Clients[index].acl != 6) ->
-                rt = true;
-            :: else ->
-                rt = false;
-        fi;
-    }
-}
-inline Authorization_publish_allowed(index, topic, rt){
-    atomic{
-        if
-            :: (Clients[index].acl != 0 && Clients[index].acl != 1 && Clients[index].acl != 4 && Clients[index].acl != 5) ->
-                rt = true;
-            :: else -> 
-                rt = false;
-        fi;
-    }
-}
-inline Authorization_read_allowed(index, topic, rt){
-    atomic{
-        if
-            :: (Clients[index].acl >= 4) ->
+            :: ((Clients[index].acl & SUBSCRIBEACL) == SUBSCRIBEACL) ->
                 rt = true;
             :: else ->
                 rt = false;
@@ -296,6 +333,54 @@ inline Authorization_read_allowed(index, topic, rt){
     }
 }
 
+inline Authorization_publish_allowed(index, topic, rt){
+    atomic{
+        if
+            :: ((Clients[index].acl & PUBLISHACL) == PUBLISHACL) ->
+                rt = true;
+            :: else -> 
+                rt = false;
+        fi;
+    }
+}
+
+
+inline Authorization_read_allowed(index, topic, rt){
+    atomic{
+        if
+            :: ((Clients[index].acl & READACL) == READACL) ->
+                rt = true;
+            :: else ->
+                rt = false;
+        fi;
+    }
+}
+
+
+inline Authorization_load_allowed(index, topic, rt){
+    atomic{
+        if
+            :: ((Clients[index].acl & LOADACL) == LOADACL) ->
+                rt = true;
+            :: else -> 
+                rt = false;
+        fi;
+    }
+}
+
+inline Authorization_store_allowed(index, topic, rt){
+    atomic{
+        if
+            :: ((Clients[index].acl & STOREACL) == STOREACL) ->
+                rt = true;
+            :: else -> 
+                rt = false;
+        fi;
+    }
+}
+
+
+/******************** Deliver *************************/
 inline Deliver_to_Subscribers(message){
     atomic{
         short i_1 = 0;
@@ -338,6 +423,7 @@ inline Deliver_to_Subscribers(message){
                     :: else -> skip;
                 fi;
 
+
                 if
                     
                     :: (hasSubscription == true && Sessions[i_1].connected == true) ->
@@ -354,9 +440,11 @@ inline Deliver_to_Subscribers(message){
                                 Sessions[i_1].messagesLen = Sessions[i_1].messagesLen + 1;
                             :: else ->
                                 printf("SESSION_%d: can not store more qos1,2 messages\n", i_1);
+
                         fi;
                     :: else -> skip;
                 fi;
+
                 nextClients:
                     skip;
                 i_1 = i_1 + 1;
@@ -366,6 +454,7 @@ inline Deliver_to_Subscribers(message){
             skip;
     }
 }
+
 inline handle__publish_qos0_Type_7(index, t){
  atomic{
 printf("Enter function handle__publish_qos0_Type_7\n");
@@ -387,9 +476,12 @@ printf("Enter function handle__publish_qos0_Type_7\n");
         Deliver_to_Subscribers(message);
 LABEL_1_Type_7:
  skip; 
+
         PUBLISH_end();
+
 }
 }
+
 inline handle__publish_qos1_Type_0(index, t){
  atomic{
 printf("Enter function handle__publish_qos1_Type_0\n");
@@ -411,21 +503,15 @@ printf("Enter function handle__publish_qos1_Type_0\n");
         Deliver_to_Subscribers(message);
 LABEL_2_Type_0:
  skip; 
+
         PUBLISH_end();
+
 }
 }
+
 inline handle__publish_qos2_Type_2(index, t){
  atomic{
 printf("Enter function handle__publish_qos2_Type_2\n");
-        localClientId = Clients[index].clientId;
-        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
-        if
-            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
-                Message message;
-                message.topic = t;
-                message.QoS = 2;
-                message.srcClientId = localClientId;
-                message.srcClientIndex = index;
         authorization_result = false;
         Authorization_publish_allowed(index, t, authorization_result);
         if
@@ -434,9 +520,16 @@ printf("Enter function handle__publish_qos2_Type_2\n");
                 goto LABEL_4_Type_2
             :: else -> skip;
         fi;
-                Deliver_to_Subscribers(message);
-LABEL_4_Type_2:
- skip; 
+        Message message_LABEL_5_Type_2;
+        message_LABEL_5_Type_2.topic = t;
+        message_LABEL_5_Type_2.QoS = 2;
+        message_LABEL_5_Type_2.srcClientId = Clients[index].clientId;
+        message_LABEL_5_Type_2.srcClientIndex = index;
+        Deliver_to_Subscribers(message_LABEL_5_Type_2);
+        localClientId = Clients[index].clientId;
+        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
+        if
+            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
                 Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
                 Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
                 Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
@@ -446,11 +539,72 @@ LABEL_4_Type_2:
             :: else ->
                 printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
         fi;
-        
+
+
+LABEL_4_Type_2:
+ skip; 
 
         PUBLISH_end();
+
 }
 }
+
+inline handle__publish_qos2_Type_3_(index, t){
+ atomic{
+printf("Enter function handle__publish_qos2_Type_3_\n");
+        localClientId = Clients[index].clientId;
+        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
+        if
+            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientIndex = index;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].origin = 1;
+                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
+            :: else ->
+                printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
+        fi;
+
+
+        PUBLISH_end();
+
+}
+}
+
+inline handle__publish_qos2_Type_4(index, t){
+ atomic{
+printf("Enter function handle__publish_qos2_Type_4\n");
+        authorization_result = false;
+        Authorization_publish_allowed(index, t, authorization_result);
+        if
+            :: (authorization_result == false) ->
+                printf("Authorization failed!\n");
+                goto LABEL_6_Type_4
+            :: else -> skip;
+        fi;
+        localClientId = Clients[index].clientId;
+        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
+        if
+            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientIndex = index;
+                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].origin = 1;
+                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
+            :: else ->
+                printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
+        fi;
+
+LABEL_6_Type_4:
+ skip; 
+
+        PUBLISH_end();
+
+}
+}
+
 inline handle__publish_qos0_retained_Type_7(index, t){
  atomic{
 printf("Enter function handle__publish_qos0_retained_Type_7\n");
@@ -466,7 +620,7 @@ printf("Enter function handle__publish_qos0_retained_Type_7\n");
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_7_Type_7
+                goto LABEL_8_Type_7
             :: else -> skip;
         fi;
         Deliver_to_Subscribers(message);
@@ -474,17 +628,23 @@ printf("Enter function handle__publish_qos0_retained_Type_7\n");
         RetainedMessages.QoS = 0;
         RetainedMessages.srcClientId = localClientId;
         RetainedMessages.srcClientIndex = index;
-LABEL_7_Type_7:
+LABEL_8_Type_7:
  skip; 
+
         PUBLISH_end();
+
 }
 }
-inline handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47(index){
+
+inline handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44(index){
  atomic{
-printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47\n");
+printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44\n");
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = true;
         printf("with cleanStart = true\n" );
+
+
+
         
         i = 0;
         do
@@ -514,11 +674,13 @@ printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Ty
         Sessions[localClientId].willmessage.srcClientIndex = -1;
         Sessions[localClientId].willmessage.origin = -1;
         CONNECT_will_message(index);
+
 }
 }
-inline handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29(index){
+
+inline handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25(index){
  atomic{
-printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29\n");
+printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25\n");
         if
             :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
                 Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
@@ -527,6 +689,9 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = true;
         printf("with cleanStart = true\n" );
+
+
+
         
         i = 0;
         do
@@ -556,14 +721,17 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
         Sessions[localClientId].willmessage.srcClientIndex = -1;
         Sessions[localClientId].willmessage.origin = -1;
         CONNECT_will_message(index);
+
 }
 }
+
 inline handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47(index){
  atomic{
 printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47\n");
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = false;
         printf("with cleanStart = false\n" );
+
         i = 0;
         do
             :: i < MAXMESSAGES ->
@@ -590,9 +758,12 @@ printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Ty
                 i = i + 1;
             :: else -> break;
         od;
+
         CONNECT_will_message(index);
+
 }
 }
+
 inline handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29(index){
  atomic{
 printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29\n");
@@ -604,6 +775,7 @@ printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_3
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = false;
         printf("with cleanStart = false\n" );
+
         i = 0;
         do
             :: i < MAXMESSAGES ->
@@ -630,24 +802,20 @@ printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_3
                 i = i + 1;
             :: else -> break;
         od;
+
         CONNECT_will_message(index);
+
 }
 }
-inline handle__disconnect_Type_0_Type_1(index){
+
+inline handle__disconnect_Type_0(index){
  atomic{
-printf("Enter function handle__disconnect_Type_0_Type_1\n");
+printf("Enter function handle__disconnect_Type_0\n");
         localClientId = Clients[index].clientId;
         if
             :: Sessions[localClientId].connected == true ->
                 if
                     :: Sessions[localClientId].willmessage.topic != -1 ->
-                        Message message;
-                        message.topic = Sessions[localClientId].willmessage.topic;
-                        message.QoS = Sessions[localClientId].willmessage.QoS;
-                        message.srcClientId = Sessions[localClientId].willmessage.srcClientId;  
-                        message.srcClientIndex = Sessions[localClientId].willmessage.srcClientIndex;
-                        printf("PUBLISHER_%d: Send the will message to subscriber\n", index);
-                        Deliver_to_Subscribers(message);
                         Sessions[localClientId].willmessage.topic = -1;
                         Sessions[localClientId].willmessage.QoS = -1;
                         Sessions[localClientId].willmessage.srcClientId = -1;
@@ -661,10 +829,40 @@ printf("Enter function handle__disconnect_Type_0_Type_1\n");
                 
         fi;
         DISCONNECT_end();
-        
 
 }
 }
+
+inline handle__disconnect_Type_1(index){
+ atomic{
+printf("Enter function handle__disconnect_Type_1\n");
+        if
+            :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
+                Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
+            :: else -> skip;
+        fi;
+        localClientId = Clients[index].clientId;
+        if
+            :: Sessions[localClientId].connected == true ->
+                if
+                    :: Sessions[localClientId].willmessage.topic != -1 ->
+                        Sessions[localClientId].willmessage.topic = -1;
+                        Sessions[localClientId].willmessage.QoS = -1;
+                        Sessions[localClientId].willmessage.srcClientId = -1;
+                        Sessions[localClientId].willmessage.srcClientIndex = -1;
+                        Sessions[localClientId].willmessage.origin = -1;
+                    :: else -> skip;
+                fi;
+                Sessions[localClientId].connected = false;
+                Clients[index].connected = false;
+            :: else -> printf("WRONG: %d has not connected to the broker!", index);
+                
+        fi;
+        DISCONNECT_end();
+
+}
+}
+
 inline handle__pubrel_Type_0(index){
  atomic{
 printf("Enter function handle__pubrel_Type_0\n");
@@ -673,6 +871,18 @@ printf("Enter function handle__pubrel_Type_0\n");
         if
             :: (Sessions[localClientId].messagesLen > 0) ->
                 lastMessage = Sessions[localClientId].messagesLen - 1;
+                if
+                    :: (Sessions[localClientId].messages[lastMessage].topic != -1 && Sessions[localClientId].messages[lastMessage].QoS == 2) ->
+                        Message message;
+                        message.topic = Sessions[localClientId].messages[lastMessage].topic;
+                        message.QoS = Sessions[localClientId].messages[lastMessage].QoS;
+                        message.srcClientId = localClientId;
+                        message.srcClientIndex = index;
+
+                        Deliver_to_Subscribers(message)
+                    :: else -> skip;  
+                fi;
+
                 Sessions[localClientId].messages[lastMessage].topic = -1;
                 Sessions[localClientId].messages[lastMessage].QoS = -1;
                 Sessions[localClientId].messages[lastMessage].srcClientId = -1;
@@ -681,9 +891,12 @@ printf("Enter function handle__pubrel_Type_0\n");
                 Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen - 1;       
             :: else -> skip;
         fi;
+
         PUBREL_end(index);
+
 }
 }
+
 inline handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14(index, t){
  atomic{
 printf("Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14\n");
@@ -692,7 +905,7 @@ printf("Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14\n");
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_31_Type_2_3_4_5_7_8_9_10_11_12_13_14
+                goto LABEL_33_Type_2_3_4_5_7_8_9_10_11_12_13_14
             :: else -> skip;
         fi;
         localClientId = Clients[index].clientId;
@@ -707,21 +920,25 @@ printf("Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14\n");
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_32_Type_2_3_4_5_7_8_9_10_11_12_13_14
+                goto LABEL_34_Type_2_3_4_5_7_8_9_10_11_12_13_14
             :: else -> skip;
         fi;
                         Deliver(RetainedMessages, localClientId);
-LABEL_32_Type_2_3_4_5_7_8_9_10_11_12_13_14:
+LABEL_34_Type_2_3_4_5_7_8_9_10_11_12_13_14:
  skip; 
+
                     :: else -> skip;
                 fi;
             :: else -> skip;
         fi;
-LABEL_31_Type_2_3_4_5_7_8_9_10_11_12_13_14:
+LABEL_33_Type_2_3_4_5_7_8_9_10_11_12_13_14:
  skip; 
+
         SUBSCRIBE_end(index, t);
+
 }
 }
+
 inline handle__unsubscribe_Type_2(index, t){
  atomic{
 printf("Enter function handle__unsubscribe_Type_2\n");
@@ -740,37 +957,47 @@ printf("Enter function handle__unsubscribe_Type_2\n");
                 break;
         od;
         UNSUBSCRIBE_end(index, t);
+
 }
 }
+
 inline ACL_revoke_Type_0(index, revokeAcl){
  atomic{
 printf("Enter function ACL_revoke_Type_0\n");
         if
             
-            :: (revokeAcl == SUBSCRIBEACL && Clients[index].acl != 0 && Clients[index].acl != 2 && Clients[index].acl != 4 && Clients[index].acl != 6) ->
+            :: (revokeAcl == SUBSCRIBEACL && (Clients[index].acl & SUBSCRIBEACL) == SUBSCRIBEACL) ->
                 Clients[index].acl = Clients[index].acl - SUBSCRIBEACL;
             
-            :: (revokeAcl == PUBLISHACL && Clients[index].acl != 0 && Clients[index].acl != 1 && Clients[index].acl != 4 && Clients[index].acl != 5) ->
+            :: (revokeAcl == PUBLISHACL && (Clients[index].acl & PUBLISHACL) == PUBLISHACL) ->
                 Clients[index].acl = Clients[index].acl - PUBLISHACL;
-            
-            :: (revokeAcl == READACL && Clients[index].acl >= 4) ->
+            :: (revokeAcl == READACL && (Clients[index].acl & READACL) == READACL) ->
                 Clients[index].acl = Clients[index].acl - READACL;
+            :: (revokeAcl == LOADACL && (Clients[index].acl & LOADACL) == LOADACL) ->
+                Clients[index].acl = Clients[index].acl - LOADACL;
+            :: (revokeAcl == STOREACL && (Clients[index].acl & STOREACL) == STOREACL) ->
+                Clients[index].acl = Clients[index].acl - STOREACL;
             :: else -> skip;
         fi;
         if
             
-            :: (revokeAcl == SUBSCRIBEACL && Clients[index].aclTruth != 0 && Clients[index].aclTruth != 2 && Clients[index].aclTruth != 4 && Clients[index].aclTruth != 6) ->
+            :: (revokeAcl == SUBSCRIBEACL && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL) ->
                 Clients[index].aclTruth = Clients[index].aclTruth - SUBSCRIBEACL;
             
-            :: (revokeAcl == PUBLISHACL && Clients[index].aclTruth != 0 && Clients[index].aclTruth != 1 && Clients[index].aclTruth != 4 && Clients[index].aclTruth != 5) ->
+            :: (revokeAcl == PUBLISHACL && (Clients[index].aclTruth & PUBLISHACL) == PUBLISHACL) ->
                 Clients[index].aclTruth = Clients[index].aclTruth - PUBLISHACL;
-            
-            :: (revokeAcl == READACL && Clients[index].aclTruth >= 4) ->
+            :: (revokeAcl == READACL && (Clients[index].aclTruth & READACL) == READACL) ->
                 Clients[index].aclTruth = Clients[index].aclTruth - READACL;
+            :: (revokeAcl == LOADACL && (Clients[index].aclTruth & LOADACL) == LOADACL) ->
+                Clients[index].aclTruth = Clients[index].aclTruth - LOADACL;
+            :: (revokeAcl == STOREACL && (Clients[index].aclTruth & STOREACL) == STOREACL) ->
+                Clients[index].aclTruth = Clients[index].aclTruth - STOREACL;
             :: else -> skip;
         fi;
+
 }
 }
+
 inline Deliver(message, subscriber){
     atomic{
         bool flag = false;
@@ -779,13 +1006,13 @@ inline Deliver(message, subscriber){
                 if
                     :: (message.retained == true) ->
                         if
-                            :: ((Clients[message.srcClientIndex].aclTruth != 0 && Clients[message.srcClientIndex].aclTruth != 1 && Clients[message.srcClientIndex].aclTruth != 4 && Clients[message.srcClientIndex].aclTruth != 5) &&  (Clients[Sessions[subscriber].clientIndex].aclTruth >= 4)) ->
+                            :: (((Clients[message.srcClientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
                                 flag = true;
                             :: else -> skip;
                         fi;
                     :: else ->
                         if
-                            :: ((Clients[Sessions[message.srcClientId].clientIndex].aclTruth != 0 && Clients[Sessions[message.srcClientId].clientIndex].aclTruth != 1 && Clients[Sessions[message.srcClientId].clientIndex].aclTruth != 4 && Clients[Sessions[message.srcClientId].clientIndex].aclTruth != 5) &&  (Clients[Sessions[subscriber].clientIndex].aclTruth >= 4)) ->
+                            :: (((Clients[Sessions[message.srcClientId].clientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
                                 flag = true;
                             :: else -> skip;
                         fi;
@@ -796,6 +1023,8 @@ inline Deliver(message, subscriber){
         assert(flag == true);
     }
 }
+
+
 proctype ProcessPublisher2(short index){
     short i = 0;
     short j = 0;
@@ -821,7 +1050,10 @@ proctype ProcessPublisher2(short index){
             }
         :: else -> break;
     od;
+
 }
+
+
 proctype ProcessPublisher(short index){
     short i = 0;
     short j = 0;
@@ -877,19 +1109,20 @@ proctype ProcessPublisher(short index){
                         canConnect = canConnect - 1;
                 fi;
             }
-        
 
         ::
             atomic{ 
                 if
-                    :: (Clients[index].connected == true && Clients[index].aclTruth != 0 && Clients[index].aclTruth != 1 && Clients[index].aclTruth != 4 && Clients[index].aclTruth != 5) ->
+                    :: (Clients[index].connected == true && (Clients[index].aclTruth & PUBLISHACL) == PUBLISHACL) ->
                         ACL_revoke(index, PUBLISHACL);
                         printf("PUBLISHER_%d: revoke PUBLISHACL\n", index);
                 fi;
             }
+
         :: else -> break;
     od;
 }
+
 proctype ProcessSubscriber(short index){
     short i = 0;
     short j = 0;
@@ -908,6 +1141,7 @@ proctype ProcessSubscriber(short index){
                 canConnect = canConnect - 1;
                 badReconnect = true;
             }
+
         :: (Clients[index].connected == true) ->
             if
                 ::  (Sessions[Clients[index].clientId].subscriptionsLen < MAXSUBSCRIPTIONS) -> 
@@ -925,9 +1159,8 @@ proctype ProcessSubscriber(short index){
                         canConnect = canConnect - 1;
                         BadDisconnect = true;
                     }
-                
 
-                :: (Clients[index].aclTruth != 0 && Clients[index].aclTruth != 2 && Clients[index].aclTruth != 4 && Clients[index].aclTruth != 6) -> 
+                :: (Clients[index].aclTruth != 0 && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL) -> 
                     atomic{ 
                         ACL_revoke(index, SUBSCRIBEACL);
                         printf("SUBSCRIBER_%d: revoke SUBSCRIBEACL\n", index);
@@ -937,6 +1170,8 @@ proctype ProcessSubscriber(short index){
         :: else -> break;
     od;
 }
+
+
 init {
     atomic{
         short m = 0;
@@ -951,16 +1186,20 @@ init {
         Clients[0].username = 0;
         Clients[0].password = 0;
         Clients[0].clientId = PUBCLIENTID_0;
+
         Clients[1].username = 1;
         Clients[1].password = 1;
         Clients[1].clientId = SUBCLIENTID_1;
+
         Clients[2].username = 2;
         Clients[2].password = 2;
         Clients[2].clientId = PUBCLIENTID_0;
-        Clients[2].acl = READACL;
-        Clients[2].aclTruth = READACL;
+        Clients[2].acl = SUBSCRIBEACL;
+        Clients[2].aclTruth = SUBSCRIBEACL;
     }
+
     run ProcessPublisher(0);
     run ProcessSubscriber(1);
+    run ProcessPublisher2(2);
     
 }
