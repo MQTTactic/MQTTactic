@@ -1,0 +1,18 @@
+{
+    "handle__connect": "void MqttPacket::handleConnect()",
+    "handle__publish": "void MqttPacket::handlePublish()",
+    "handle__pubrel": "void MqttPacket::handlePubRel()",
+    "handle__subscribe": "void MqttPacket::handlePubRel()",
+    "handle__unsubscribe": "void MqttPacket::handleUnsubscribe()",
+    "handle__disconnect": "void MqttPacket::handleDisconnect()",
+    "handle__authorize": "void Authentication::loadMosquittoAclFile()",
+    "handle__revoke": "void Authentication::loadMosquittoAclFile()",
+    "premission_check": "AuthResult Authentication::aclCheck(const std::string &clientid, const std::string &username,const std::string &topic, const std::vector<std::string> &subtopics,AclAccess access, char qos, bool retain)",
+    "subs": "ThreadData::subscriptionStore.subscribers",
+    "RetainedMsg": "RetainedMessageNode::retainedMessages",
+    "status": "Client::disconnecting",
+    "WillMsg": "Client::will_topic",
+    "msgQue": "Session::qosPacketQueue",
+    "msg": "Client::writebuf",
+    "permission": "Authentication::aclTree"
+}
