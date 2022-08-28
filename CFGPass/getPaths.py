@@ -3,9 +3,11 @@ import re
 import shutil
 import sys
 from copy import deepcopy
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
+
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
+
 DIR = BASE_DIR + "/OUTPUT/"
 OUTPUTDIR = BASE_DIR + "/../ModelCheck/SymbolicExecutionResults/"
 handlers = {
@@ -15,8 +17,9 @@ handlers = {
     "handle__unsubscribe": config["handle__unsubscribe"],
     "handle__connect": config["handle__connect"],
     "handle__disconnect": config["handle__disconnect"],
-    "handle__ACL_revoke": config["handle__ACL_revoke"]
+    "handle__revoke": config["handle__revoke"]
 }
+#handlers = ("handle__connect", "handle__publish", )
 operations = {
     "send__connack": config["send__connack"],
     "send__puback": config["send__puback"],
@@ -24,6 +27,7 @@ operations = {
     "send__pubcomp": config["send__pubcomp"],
     "send__suback": config["send__suback"],
     "send__unsuback": config["send__unsuback"],
+    # key operations
     "acl_check": config["acl_check"],
     "deliver_to_subscribers": config["deliver_to_subscribers"],
     "deliver": config["deliver"],
@@ -31,11 +35,22 @@ operations = {
     "sub_remove": config["sub_remove"],
     "acl_revoke": config["acl_revoke"],
 }
+
+# {keyBB: [calledFuncs]}
 keyBBs = {}
+
 keyOps = {}
+
+# set: {"db__message_write_queued_in", "db__message_write_queued_in"}
 keyFuncs = set()
+# {startBB: {endBB: [paths]}}
 paths = {}
+
+# {funcName: [keyBBPaths]}
 pathTypes = {}
+
+
+# ，(pathTypes)，keyBBs(paths)
 def readPaths(func):
     global keyBBs, keyOps, keyFuncs, paths, pathTypes
     pathTypes[func] = []
@@ -85,12 +100,16 @@ def readPaths(func):
                         endOfPath = False
                         continue
                     readStr = f.readline()
+
                 pathTypes[func].append(pathType)
+
+
 def getFullPathTypes(keyBBPath, results):
     global keyBBs, keyOps, keyFuncs, paths, pathTypes
     for bb in keyBBPath:
         for r in results:
             r.append(bb)
+        # bb
         if (bb in keyBBs.keys()):
             for call in keyBBs[bb]:
                 inMainPath = False
@@ -107,6 +126,8 @@ def getFullPathTypes(keyBBPath, results):
                     resultsTmp += r
                 results = resultsTmp
     return results
+
+
 def typeFilter(list):
     result = []
     for i in list:
@@ -117,6 +138,8 @@ def typeFilter(list):
         else:
             continue
     return result
+
+
 for h in handlers:
     keyBBs.clear()
     keyFuncs.clear()
@@ -131,8 +154,10 @@ for h in handlers:
             os.mkdir(DIR + "PATHS/" + h)
     except:
         pass
+
     if not os.path.exists(DIR + h + ".output"):
         continue
+    # keyBBs，keyFuncs
     with open(DIR + h + ".output", encoding="utf-8") as f:
         readStr = f.readline()
         keyBB = ''
@@ -155,6 +180,9 @@ for h in handlers:
         keyFuncs.add(handlers[h])
     for f in keyFuncs:
         readPaths(f)
+
+    # print(keyFuncs)
+    # print(pathTypes)
     results = []
     for Type in pathTypes[handlers[h]]:
         r = [[]]
@@ -163,6 +191,7 @@ for h in handlers:
             x = typeFilter(t)
             if (x not in results):
                 results.append(x)
+
     outputFile = open(f"{OUTPUTDIR}/{h}.type", 'w')
     for Type in results:
         bbPath = []
@@ -194,3 +223,25 @@ for h in handlers:
                 print(f"'{k}'", end=',', file=outputFile)
         print(')', end='\n', file=outputFile)
     outputFile.close()
+    # bbStack = []
+    # outputs = [[]]
+    # for bb in Type:
+    #     if (len(bbStack) >= 1 and bbStack[-1].split(':')[0] == bb.split(':')[0]):
+    #         print(f"{bbStack[-1]} --> {bb} has {len(paths[bbStack[-1]][bb])} paths")
+    #         y = []
+    #         for i in paths[bbStack[-1]][bb]:
+    #             x = deepcopy(outputs)
+    #             for j in x:
+    #                 j += i
+    #             y += x
+    #         outputs = y
+    #         bbStack.pop()
+    #     if (bb.split(':')[1] != "RETURN"):
+    #         bbStack.append(bb)
+
+    # for i, o in enumerate(outputs):
+    #     if (i >= 1000):
+    #         break
+    #     with open(DIR + "PATHS/" + h + "/Type-" + str(results.index(Type)) + "/path." + str(i), 'w', encoding="utf-8") as f:
+    #         for bb in o:
+    #             f.write(bb + "\n")

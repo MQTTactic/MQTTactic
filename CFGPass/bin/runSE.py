@@ -2,10 +2,14 @@ import subprocess
 import time
 import re
 import os
+
 count = 0
 process = []
 end = False
-handler = "handle__connect"
+
+handler = "handle__publish"
+
+
 def run(type):
     global process, handler
     tyPath = f'../OUTPUT/PATHS/{handler}/Type-{type}'
@@ -13,12 +17,23 @@ def run(type):
         starttime = time.time()
         if not os.path.exists("../../ModelCheck/SymbolicExecutionResults/" + handler):
             os.mkdir("../../ModelCheck/SymbolicExecutionResults/" + handler)
-        f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}_cleanStartF.log', 'w')
-        popen = subprocess.Popen(["./SE", handler, "_ZN10MqttPacket13handleConnectEv", str(type), "/Experiments/FlashMQ/CFGPass/"], stdout=f, stderr=subprocess.STDOUT)
+        #f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}_cleanStartT.log', 'w')
+        f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}.log', 'w')
+        # f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}_qos0_retained.log', 'w')
+        popen = subprocess.Popen([
+            "./SE", handler, "_ZN10MqttPacket13handlePublishEv",
+            str(type), "/root/Documents/mqttdemo.com/Tools/MQTTactic/CFGPass",
+            "/root/Documents/mqttdemo.com/Tools/MQTTactic/CFGPass/complete_cleanStartT.bc"
+        ],
+                                 stdout=f,
+                                 stderr=subprocess.STDOUT)
         process.append((f, popen, starttime, str(type)))
         return True
     else:
         return False
+
+
+T1 = time.time()
 while (1):
     for idx, p in enumerate(process):
         if (p != -1):
@@ -44,6 +59,8 @@ while (1):
     while (alive_process < 5):
         if (end and alive_process == 0):
             print("OKKKKKKKKKKK!")
+            T2 = time.time()
+            print('RUN TIME:%s ms' % ((T2 - T1) * 1000))
             exit()
         if (run(count)):
             count += 1

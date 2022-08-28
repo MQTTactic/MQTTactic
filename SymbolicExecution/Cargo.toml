@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 boolector = "0.4.2"
-llvm-ir = {path = "/tools/llvm-ir"}
-haybale = {path = "/tools/haybale",features = ["llvm-9"]}
+llvm-ir = {path = "../../llvm-ir"}
+haybale = {path = "../../Haybale",features = ["llvm-9"]}

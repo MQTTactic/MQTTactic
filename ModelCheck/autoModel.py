@@ -1,16 +1,19 @@
 import re
 import os
 import sys
+import json
 import pathTypes
 from termcolor import *
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
 
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
 
 path_types = pathTypes.pathTypes
+with open("./pathTypes.json", 'w') as f:
+    f.write(json.dumps(path_types))
 broker_config = {
-    "acl_check_pattern": config["acl_check_pattern"],
+    "acl_check_pattern": "",
     "authorization_pub": config["authorization_pub"],
     "authorization_sub": config["authorization_sub"],
     "authorization_read": config["authorization_read"],
@@ -23,13 +26,27 @@ broker_config = {
     "handle__pubrel_end": "send__pubcomp-----",
     "handle__subscribe_end": "send__suback-----",
     "handle__unsubscribe_end": "send__unsuback-----",
+    # key operations
     "acl_check": "acl_check-----",
     "deliver_to_subscribers": "deliver_to_subscribers-----",
     "deliver": "deliver-----",
     "sub_add": "sub_add-----",
     "sub_remove": "sub_remove-----",
-    "acl_revoke": "acl_revoke-----",
+    "acl_revoke": "acl_revoke",
 }
+
+broker_config["acl_check_pattern"] = "("
+if (config["authorization_pub"] != ""):
+    broker_config["acl_check_pattern"] += config["authorization_pub"]
+if (config["authorization_sub"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_sub"]
+if (config["authorization_read"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_read"]
+if (config["authorization_store"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_store"]
+if (config["authorization_load"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_load"]
+broker_config["acl_check_pattern"] += ")"
 
 
 class Model:
@@ -37,13 +54,13 @@ class Model:
     def __init__(self, broker_name, basemodel_file, output_file):
         self.broker_name = broker_name
         self.config = broker_config
-
+        # goto label
         self.label = 0
-
+        # basemodel 
         self.source_code = []
-
+        #  {'handle__pubrel':(begin_line,end_lien)} 
         self.source_code_funcs = {}
-
+        # (，handle__pubrel1)
         self.paths = {}
         self.param = {
             'handle__publish_qos0': 'index, t',
@@ -98,6 +115,7 @@ class Model:
                 else:
                     break
 
+    # 
     def AuthorizationPub(self, client, topic, label='undefinedType'):
         label = f'LABEL_{self.label}_{label}'
         self.label += 1
@@ -180,6 +198,7 @@ class Model:
                 do
                     :: i < MAXMESSAGES ->
                         Sessions[Clients[index].clientId].messages[i].topic = -1;
+                        Sessions[Clients[index].clientId].messages[i].mid = -1;
                         Sessions[Clients[index].clientId].messages[i].QoS = -1;
                         Sessions[Clients[index].clientId].messages[i].srcClientId = -1;
                         Sessions[Clients[index].clientId].messages[i].srcClientIndex = -1;
@@ -213,19 +232,24 @@ class Model:
         fi;'''
             return (code, label)
 
+    # pubrec
     def CreateMessage(self, client, topic, qos, label='undefinedType'):
         label = f'LABEL_{self.label}_{label}'
         self.label += 1
         if (self.broker_name == "mosquitto" or self.broker_name == "volantmq" or self.broker_name == "FlashMQ" or self.broker_name == "emitter"):
             code = f'''        if
             :: Sessions[Clients[index].clientId].messagesLen < MAXMESSAGES ->
+                lastMessage = Sessions[localClientId].messagesLen;
                 printf("QoS2 message from queue to inflight!\\n");
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].topic = t;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].QoS = 2;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].srcClientId = Clients[index].clientId;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].srcClientIndex = {client};
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].origin = 1;
+                Sessions[Clients[index].clientId].messages[lastMessage].topic = t;
+                Sessions[Clients[index].clientId].messages[lastMessage].mid = GlobalMid;
+                GlobalMid = GlobalMid + 1;
+                Sessions[Clients[index].clientId].messages[lastMessage].QoS = 2;
+                Sessions[Clients[index].clientId].messages[lastMessage].srcClientId = Clients[index].clientId;
+                Sessions[Clients[index].clientId].messages[lastMessage].srcClientIndex = {client};
+                Sessions[Clients[index].clientId].messages[lastMessage].origin = 1;
                 Sessions[Clients[index].clientId].messagesLen = Sessions[Clients[index].clientId].messagesLen + 1;
+                printf("Message_%d: Extra QoS2 message created!\\n", Sessions[Clients[index].clientId].messages[lastMessage].mid);
             :: else -> skip;
         fi;'''
             return (code, label)
@@ -293,6 +317,7 @@ class Model:
                     func_stack_flag = False
         return funcs
 
+    # ，
     def GetInsertionPoint(self, begin_line, end_line):
         points = [begin_line, end_line]
         for i in range(begin_line, end_line):
@@ -301,6 +326,7 @@ class Model:
                 points.insert(-1, i + 1)
         return points
 
+    # 
     def Insert(self, handler, content):
         results = []
         func_begin_line = self.source_code_funcs[handler][0]
@@ -390,7 +416,7 @@ class Model:
         return results
 
     def BaseHandlePubrel(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"PUBREL_entry_point": [], "PUBREL": [], "PUBREL_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -412,7 +438,7 @@ class Model:
         self.source_code_funcs['handle__pubrel'] = (edges['PUBREL'][0], edges['PUBREL'][-1])
 
     def BaseHandleConnect(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"CONNECT_entry_point": [], "CONNECT_auth_success": [], "CONNECT_cleanStart_true": [], "CONNECT_cleanStart_false": [], "CONNECT_will_message": [], "CONNECT_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -435,7 +461,7 @@ class Model:
         self.source_code_funcs['handle__connect_cleanStartF'] = (edges['CONNECT_cleanStart_false'][0], edges['CONNECT_cleanStart_false'][-1])
 
     def BaseHandlePublish(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"PUBLISH_entry_point": [], "PUBLISH": [], "PUBLISH_QoS0_step2": [], "PUBLISH_QoS1_step2": [], "PUBLISH_QoS2_step2": [], "PUBLISH_retained_QoS0_step2": [], "PUBLISH_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -460,7 +486,7 @@ class Model:
         self.source_code_funcs['handle__publish_qos0_retained'] = (edges['PUBLISH_retained_QoS0_step2'][0], edges['PUBLISH_retained_QoS0_step2'][-1])
 
     def BaseHandleSubscribe(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"SUBSCRIBE_entry_point": [], "SUBSCRIBE": [], "SUBSCRIBE_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -482,7 +508,7 @@ class Model:
         self.source_code_funcs['handle__subscribe'] = (edges['SUBSCRIBE'][0], edges['SUBSCRIBE'][-1])
 
     def BaseHandleUnSubscribe(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"UNSUBSCRIBE_entry_point": [], "UNSUBSCRIBE": [], "UNSUBSCRIBE_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -504,7 +530,7 @@ class Model:
         self.source_code_funcs['handle__unsubscribe'] = (edges['UNSUBSCRIBE'][0], edges['UNSUBSCRIBE'][-1])
 
     def BaseAclRevoke(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"ACL_revoke": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -526,7 +552,7 @@ class Model:
         self.source_code_funcs['ACL_revoke'] = (edges['ACL_revoke'][0], edges['ACL_revoke'][-1])
 
     def BaseHandleDisconnect(self, begin_line, end_line):
-
+        # Base Modelhandler
         edges = {"DISCONNECT_entry_point": [], "DISCONNECT": [], "DISCONNECT_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -553,7 +579,7 @@ class Model:
             for path in path_types['handle__pubrel']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -561,7 +587,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -578,23 +604,23 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__pubrel_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
                             if (acl_check_stack != [] and self.config['acl_check'] in acl_check_stack[-1] and self.config['will'] in acl_check_stack[-1]):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 acl_check_stack.append(op)
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
                             insert.append((self.pubrel_insert_point['PUBREL'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.pubrel_insert_point['PUBREL'][2], insert_code))
-
+                # 
                 if (False):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__pubrel : {path}", "red"))
                 else:
                     handle__pubrel.append((insert, type))
@@ -607,7 +633,7 @@ class Model:
             for path in path_types['handle__connect_cleanStartT']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -617,7 +643,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -635,7 +661,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__connect_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
@@ -646,14 +672,14 @@ class Model:
                             elif (will_count == 0 and self.config['will'] in op):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 will_count += 1
-
+                        # cleanStart=true deliver
                         if (insert_flag == 0 and self.config['deliver'] in op):
                             insert_flag = 1
                         elif (insert_code != ''):
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_true'][0], insert_code))
-
+                # connack
                 if (False):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__connect_cleanStartT : {path}", "red"))
                 else:
                     handle__connect_cleanStartT.append((insert, type))
@@ -662,7 +688,7 @@ class Model:
             for path in path_types['handle__connect_cleanStartF']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -672,7 +698,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -691,7 +717,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__connect_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
@@ -704,7 +730,7 @@ class Model:
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 will_count += 1
                                 will_flag = True
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver'] in op):
                             insert_flag = 1
                         elif (will_flag):
@@ -714,9 +740,9 @@ class Model:
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_false'][0], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_false'][2], insert_code))
-
+                # connack
                 if (False):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__connect_cleanStartF : {path}", "red"))
                 elif (insert_flag == 0):
                     pass
@@ -733,13 +759,13 @@ class Model:
             for path in path_types['handle__publish_qos0']:
                 type = ''
                 insert = []
-
+                # deliver_to_subscribers
                 insert_flag = 0
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -748,24 +774,24 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__publish_qos1_end'] in op):
                             pass
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-
+                        # deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='0', label=type)
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_QoS0_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_QoS0_step2'][2], insert_code))
-
+                # publish_qos0deliver_to_subscribers
                 if (insert_flag == 0):
                     print(colored(f"Error: error/uncomplete path type of handle__publish_qos0 : {path}", "red"))
                 else:
@@ -776,13 +802,13 @@ class Model:
                 type = ''
                 insert = []
                 insert_flag = 0
-
+                # handler
                 end_flag = False
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -791,25 +817,25 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos2end，，session
                         elif (self.config['handle__publish_qos1_end'] in op):
                             end_flag = True
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-
+                        # deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='1', label=type)
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_QoS1_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_QoS1_step2'][2], insert_code))
                 if (insert_flag == 0):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__publish_qos1 : {path}", "red"))
                 else:
                     handle__publish_qos1.append((insert, type))
@@ -819,14 +845,14 @@ class Model:
                 type = ''
                 insert = []
                 insert_flag = 0
-
+                # handler
                 end_flag = False
                 if (len(self.publish_insert_point['PUBLISH_QoS2_step2']) == 4):
                     for op in path:
                         if ('Type-' in op):
                             type = op.replace('-', '_').replace(',', '_')
                         else:
-
+                            # 
                             insert_code = ''
                             if (self.config['acl_check'] in op):
                                 foo = self.GetAclCheck(op)
@@ -835,7 +861,7 @@ class Model:
                                 else:
                                     print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                     exit()
-
+                            # qos2，qos1end，，session
                             elif (self.config['handle__publish_qos1_end'] in op):
                                 pass
                             elif (self.config['handle__publish_qos2_end'] in op):
@@ -843,20 +869,20 @@ class Model:
                                     end_flag = True
                                 else:
                                     insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-
+                            # deliver_to_subscribers
                             elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                                 insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='2', label=type)
-
+                            # 
                             if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                                 insert_flag = 1
                             elif (insert_flag == 0 and insert_code != ''):
-
+                                # deliver_to_subscribers
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][1], insert_code))
                             elif (insert_flag == 1 and insert_code != ''):
-
+                                # deliver_to_subscribers
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][2], insert_code))
                     if (insert_flag == 0):
-
+                        # TODO: ，BaseModel，
                         print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
@@ -865,7 +891,7 @@ class Model:
                         if ('Type-' in op):
                             type = op.replace('-', '_').replace(',', '_')
                         else:
-
+                            # 
                             insert_code = ''
                             if (self.config['acl_check'] in op):
                                 foo = self.GetAclCheck(op)
@@ -879,14 +905,14 @@ class Model:
                                     end_flag = True
                                 else:
                                     insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-
+                            # deliver_to_subscribers
                             elif (self.config['deliver_to_subscribers'] in op):
                                 insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='2', label=type)
-
+                            # 
                             if (insert_code != ''):
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][0], insert_code))
                     if (False):
-
+                        # TODO: ，BaseModel，
                         print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
@@ -895,13 +921,13 @@ class Model:
             for path in path_types['handle__publish_qos0_retained']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -910,26 +936,26 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__publish_qos1_end'] in op):
                             pass
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-
+                        # deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='0', label=type)
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_retained_QoS0_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-
+                            # deliver_to_subscribers
                             insert.append((self.publish_insert_point['PUBLISH_retained_QoS0_step2'][2], insert_code))
-
+                # publish_qos0deliver
                 if (insert_flag == 0):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: error path type of handle__publish_qos0_retained : {path}", "red"))
                 else:
                     handle__publish_qos0_retained.append((insert, type))
@@ -941,7 +967,7 @@ class Model:
             for path in path_types['handle__subscribe']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 end_flag = False
                 sub_flag = False
@@ -950,7 +976,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -975,7 +1001,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__subscribe_end'] in op):
                             end_flag = True
                         elif (self.config['sub_add'] in op):
@@ -984,7 +1010,7 @@ class Model:
                             if (acl_check_stack != [] and self.config['acl_check'] in acl_check_stack[-1] and self.config['will'] in acl_check_stack[-1]):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 acl_check_stack.append(op)
-
+                        # 
                         if (self.config['deliver'] in op and insert_flag == 0):
                             insert_flag = 1
 
@@ -994,11 +1020,11 @@ class Model:
                             insert.append((self.subscribe_insert_point['SUBSCRIBE'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.subscribe_insert_point['SUBSCRIBE'][2], insert_code))
-
+                # 
                 if (False):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__subscribe : {path}", "red"))
-
+                # handle__subscriberetained message
                 elif (insert_flag == 0 or not sub_flag):
                     pass
                 else:
@@ -1019,7 +1045,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -1044,7 +1070,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # qos0，qos1，2end，，session
                         elif (self.config['handle__unsubscribe_end'] in op):
                             end_flag = True
                         elif (self.config['sub_remove'] in op):
@@ -1056,11 +1082,11 @@ class Model:
 
                         if (insert_code != ''):
                             insert.append((self.unsubscribe_insert_point['UNSUBSCRIBE'][0], insert_code))
-
+                # 
                 if (False):
-
+                    # TODO: ，BaseModel，
                     print(colored(f"Error: can not find the end of handle__unsubscribe : {path}", "red"))
-
+                # handle__unsubscriberetained message
                 elif (not sub_flag):
                     pass
                 else:
@@ -1073,7 +1099,7 @@ class Model:
             for path in path_types['handle__disconnect']:
                 type = ''
                 insert = []
-
+                # deliver
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -1081,12 +1107,12 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
                             if (foo):
-
+                                # if (self.config['will'] in op):
                                 insert_code = foo(client='Sessions[Clients[index].clientId].willmessage.srcClientIndex', topic='Sessions[Clients[index].clientId].willmessage.topic', label=type)
                                 if (op in acl_check_stack):
                                     insert_code = ''
@@ -1095,7 +1121,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-
+                        # 
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                             insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
@@ -1107,18 +1133,18 @@ class Model:
 
     def CompleteAclRevoke(self):
         ACL_revoke = []
-        if ('handle__ACL_revoke' in path_types.keys()):
-            for path in path_types['handle__ACL_revoke']:
+        if ('handle__revoke' in path_types.keys()):
+            for path in path_types['handle__revoke']:
                 type = ''
                 insert = []
-
+                # 
                 insert_flag = 0
                 acl_check_stack = []
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-
+                        # 
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -1167,7 +1193,7 @@ class Model:
                     else:
                         self.output.write('skip;\n')
                     line = self.source_code_funcs[h][1]
-            if ('inline Deliver(message, subscriber)' in code):
+            if ('inline Deliver(msg, subscriber)' in code):
                 for h in self.paths:
                     for func in self.paths[h]:
                         func_content = f'inline {func[1]}({self.param[h]})' + '{\n atomic{\n'
@@ -1182,5 +1208,5 @@ class Model:
 
 
 if __name__ == "__main__":
-    model = Model('volantmq', 'BaseModel/BaseModel.pml', 'ConcreteModel/ConcreteModel.pml')
+    model = Model('FlashMQ', 'BaseModel/BaseModel.pml', 'ConcreteModel/ConcreteModel.pml')
     model.CompleteModel()

@@ -1,6 +1,7 @@
 use llvm_sys::*;
+
 pub fn from_bc_path(path: &str) {
-    
+    // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
     use std::ffi::{CStr, CString};
     use std::mem;
     let memory_buffer = unsafe {
@@ -20,7 +21,9 @@ pub fn from_bc_path(path: &str) {
         memory_buffer
     };
     debug!("Created a MemoryBuffer");
+
     let context = from_llvm::Context::new();
+
     use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
     let module = unsafe {
         let mut module: mem::MaybeUninit<LLVMModuleRef> = mem::MaybeUninit::uninit();
@@ -34,7 +37,10 @@ pub fn from_bc_path(path: &str) {
     };
     debug!("Parsed bitcode to llvm_sys module");
 }
+
 fn main() {
-    from_bc_path("/Experiments/FlashMQ/CFGPass/complete.bc")
+    from_bc_path("/home/szx/Documents/Experiments/FlashMQ/CFGPass/complete.bc")
 }
+
+
 format!("{}\0", &"/tmp/main.bc".to_owned()).as_ptr() as *const i8;

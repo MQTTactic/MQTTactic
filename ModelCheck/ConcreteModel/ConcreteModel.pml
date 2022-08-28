@@ -1,5 +1,5 @@
 #define BROKER -1
-
+// ClientId
 #define PUBCLIENTID_0 0
 #define SUBCLIENTID_1 1
 
@@ -10,6 +10,9 @@
 #define MAXSESSIONS 2
 
 
+/***
+UPDATE
+***/
 #define SUBSCRIBEACL 1
 #define PUBLISHACL 2
 #define READACL 4
@@ -17,21 +20,23 @@
 #define LOADACL 16
 
 
-
+// session（will message）
 typedef Message{
-    short topic = -1; 
-    short QoS = -1; 
-    short srcClientId = -1; 
+    short topic = -1; // topic=0 
+    short mid = -1;
+    short QoS = -1; // 0,1,2
+    short srcClientId = -1; //PUBCLIENTID_0、 SUBCLIENTID_1
     short srcClientIndex = -1;
-    short origin = -1; 
+    short origin = -1; // 0: broker; 1: publisher; 
     bool retained = false;
 }
 
 
-
+// 
 typedef RetainedMessage{
-    short topic = -1; 
-    short QoS = -1; 
+    short topic = -1; // topic=0 
+    short mid = -1;
+    short QoS = -1; // 0,1,2
     short srcClientId = -1; 
     short srcClientIndex = -1;
     bool retained = true;
@@ -43,14 +48,14 @@ typedef Subscription{
 }
 
 
-
+// clientId
 typedef Session{
     short clientId = -1;
     short clientIndex = -1;
     bool cleanStart;
     bool connected = false;
 
-    
+    // session，publisherqos2，subscriberbrokerqos1、2
     Message messages[MAXMESSAGES];
     short messagesLen = 0;
     Subscription subscriptions[MAXSUBSCRIPTIONS];
@@ -60,16 +65,19 @@ typedef Session{
     
 }
 
-
+// username
 typedef Client{
     short username;
     short password;
     short clientId;
     bool connected = false;
 
-    short acl = PUBLISHACL + SUBSCRIBEACL;
-    short aclTruth = PUBLISHACL + SUBSCRIBEACL;
-    
+    /***
+    UPDATE
+    ***/
+    short acl = PUBLISHACL + SUBSCRIBEACL + READACL;
+    short aclTruth = PUBLISHACL + SUBSCRIBEACL + READACL;
+    //Session session;
 }
 
 
@@ -77,17 +85,27 @@ typedef Client{
 
 
 bool BadDisconnect;
+bool hijacked;
+short GlobalMid;
 Client Clients[MAXCLIENTS];
 Session Sessions[MAXSESSIONS];
-
+// Sessionssession
+/*
+    TODO: topic=0，topicretained messages
+*/
 RetainedMessage RetainedMessages;
+
 
 
 
 /******************** CONNECT *************************/
 inline CONNECT_entry_point(index){
     atomic{
-        
+        /*
+            TODO:
+            
+        */
+        // Authentication_UserPass_allowed();
         CONNECT_auth_success(index);
     }
 }
@@ -114,8 +132,8 @@ inline CONNECT_auth_success(index){
 inline CONNECT_cleanStart_true(index){
     atomic{
 if
-:: handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44(index);
-:: handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25(index);
+:: handle__connect_cleanStartT_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47_Type_24_44(index);
+:: handle__connect_cleanStartT_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9_Type_25(index);
 fi;
     }
 }
@@ -123,8 +141,8 @@ fi;
 inline CONNECT_cleanStart_false(index){
     atomic{
 if
-:: handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47(index);
-:: handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29(index);
+:: handle__connect_cleanStartF_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47(index);
+:: handle__connect_cleanStartF_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9(index);
 fi;
     }
 }
@@ -134,14 +152,17 @@ inline CONNECT_will_message(index){
     atomic{
         localClientId = Clients[index].clientId;
         if
-            
+            // publisherwill message，subscriber，will
             :: (localClientId != SUBCLIENTID_1) ->
                 Sessions[localClientId].willmessage.topic = 0;
-                
+                Sessions[localClientId].willmessage.mid = GlobalMid;
+                GlobalMid = GlobalMid + 1;
+                // qoswill message
                 Sessions[localClientId].willmessage.QoS = 0;
                 Sessions[localClientId].willmessage.srcClientId = localClientId;
                 Sessions[localClientId].willmessage.srcClientIndex = index;
                 Sessions[localClientId].willmessage.origin = 1;
+                printf("Message_%d: Will message created!\n",Sessions[localClientId].willmessage.mid);
             :: else -> skip;
         fi;
 
@@ -196,8 +217,6 @@ inline PUBLISH_QoS2_step2(index, t){
     atomic{
 if
 :: handle__publish_qos2_Type_2(index, t);
-:: handle__publish_qos2_Type_3_(index, t);
-:: handle__publish_qos2_Type_4(index, t);
 fi;
     }
 }
@@ -221,7 +240,9 @@ inline PUBLISH_end(){
 
 
 /******************** PUBREL *************************/
-
+/*
+    TODO: topic，PUBREL，Publishersession
+*/
 inline PUBREL_entry_point(index){
     atomic{
         PUBREL(index);
@@ -381,25 +402,24 @@ inline Authorization_store_allowed(index, topic, rt){
 
 
 /******************** Deliver *************************/
-inline Deliver_to_Subscribers(message){
+inline Deliver_to_Subscribers(msg){
     atomic{
         short i_1 = 0;
-        printf("Message to subscribers: Topic = %d; QoS = %d; FROM = SESSION_%d; \n", message.topic, message.QoS, message.srcClientId);
         do
             :: i_1 < MAXSESSIONS ->
                 bool hasSubscription = false;
                 j = 0;
                 if
-                    
+                    // session，cleanStart=true, disconnect，
                     :: (Sessions[i_1].clientId == -1) ->
                         goto nextClients;
                     :: else -> skip;
                 fi;
-                
+                // Clients[i_1] ，messagetopic
                 do
                     :: j < MAXSUBSCRIPTIONS ->
                         if
-                            :: (Sessions[i_1].subscriptions[j].topic == message.topic) ->
+                            :: (Sessions[i_1].subscriptions[j].topic == msg.topic) ->
                                 hasSubscription = true;
                                 break;
                             :: else -> skip;
@@ -408,12 +428,15 @@ inline Deliver_to_Subscribers(message){
                     :: else -> 
                         goto nextClients;
                 od;
-
+                /***
+                UPDATE
+                ***/
+/*------------------------------Mosquitto-BEGIN---------------------------------*/
                 if
-                    
+                    // session，cleanStart=true, disconnect，
                     :: (Sessions[i_1].clientId != -1) ->
                         authorization_result = false;
-                        Authorization_read_allowed(Sessions[i_1].clientIndex, message.topic, authorization_result);
+                        Authorization_read_allowed(Sessions[i_1].clientIndex, msg.topic, authorization_result);
                         if
                             :: (authorization_result == false) ->
                                 printf("Authorization failed!\n");
@@ -422,22 +445,24 @@ inline Deliver_to_Subscribers(message){
                         fi;
                     :: else -> skip;
                 fi;
-
+/*------------------------------Mosquitto-END---------------------------------*/
 
                 if
-                    
+                    // 
                     :: (hasSubscription == true && Sessions[i_1].connected == true) ->
-                        Deliver(message, i_1);
-                    
-                    :: (hasSubscription == true && Sessions[i_1].connected == false && (message.QoS == 1 || message.QoS == 2)) ->
+                        Deliver(msg, i_1);
+                    // QoS1，2session
+                    :: (hasSubscription == true && Sessions[i_1].connected == false && (msg.QoS == 1 || msg.QoS == 2)) ->
                         if
                             :: Sessions[i_1].messagesLen < MAXMESSAGES ->
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].topic = message.topic;
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].QoS = message.QoS;
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientId = message.srcClientId;
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientIndex = message.srcClientIndex;
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].origin = 0; 
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].topic = msg.topic;
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].mid = msg.mid;
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].QoS = msg.QoS;
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientId = msg.srcClientId;
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientIndex = msg.srcClientIndex;
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].origin = 0; // brokersubscriber
                                 Sessions[i_1].messagesLen = Sessions[i_1].messagesLen + 1;
+                                printf("Message_%d: Message stored!\n", msg.mid);
                             :: else ->
                                 printf("SESSION_%d: can not store more qos1,2 messages\n", i_1);
 
@@ -462,9 +487,12 @@ printf("Enter function handle__publish_qos0_Type_7\n");
         printf("PUBLISHER_%d: publish a QoS0 message\n", index);
         Message message;
         message.topic = t;
+        message.mid = GlobalMid;
+        GlobalMid = GlobalMid + 1;
         message.QoS = 0;
         message.srcClientId = localClientId;
         message.srcClientIndex = index;
+        printf("Message_%d: QoS0 message created!\n", message.mid);
         authorization_result = false;
         Authorization_publish_allowed(index, t, authorization_result);
         if
@@ -489,9 +517,12 @@ printf("Enter function handle__publish_qos1_Type_0\n");
         printf("PUBLISHER_%d: publish a QoS1 message\n", index);
         Message message;
         message.topic = t;
+        message.mid = GlobalMid;
+        GlobalMid = GlobalMid + 1;
         message.QoS = 1;
         message.srcClientId = localClientId;
         message.srcClientIndex = index;
+        printf("Message_%d: QoS1 message created!\n", message.mid);
         authorization_result = false;
         Authorization_publish_allowed(index, t, authorization_result);
         if
@@ -512,6 +543,23 @@ LABEL_2_Type_0:
 inline handle__publish_qos2_Type_2(index, t){
  atomic{
 printf("Enter function handle__publish_qos2_Type_2\n");
+        localClientId = Clients[index].clientId;
+        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
+        if
+            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
+                lastMessage = Sessions[localClientId].messagesLen;
+                Sessions[localClientId].messages[lastMessage].topic = t;
+                Sessions[localClientId].messages[lastMessage].mid = GlobalMid;
+                GlobalMid = GlobalMid + 1;
+                Sessions[localClientId].messages[lastMessage].QoS = 2;
+                Sessions[localClientId].messages[lastMessage].srcClientId = localClientId;
+                Sessions[localClientId].messages[lastMessage].srcClientIndex = index;
+                Sessions[localClientId].messages[lastMessage].origin = 1;
+                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
+                printf("Message_%d: QoS2 message created!\n", Sessions[localClientId].messages[lastMessage].mid);
+                /***
+                UPDATE
+                ***/
         authorization_result = false;
         Authorization_publish_allowed(index, t, authorization_result);
         if
@@ -520,86 +568,13 @@ printf("Enter function handle__publish_qos2_Type_2\n");
                 goto LABEL_4_Type_2
             :: else -> skip;
         fi;
-        Message message_LABEL_5_Type_2;
-        message_LABEL_5_Type_2.topic = t;
-        message_LABEL_5_Type_2.QoS = 2;
-        message_LABEL_5_Type_2.srcClientId = Clients[index].clientId;
-        message_LABEL_5_Type_2.srcClientIndex = index;
-        Deliver_to_Subscribers(message_LABEL_5_Type_2);
-        localClientId = Clients[index].clientId;
-        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
-        if
-            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientIndex = index;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].origin = 1;
-                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
-            :: else ->
-                printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
-        fi;
-
-
+                Deliver_to_Subscribers(Sessions[localClientId].messages[lastMessage]);
 LABEL_4_Type_2:
  skip; 
 
-        PUBLISH_end();
-
-}
-}
-
-inline handle__publish_qos2_Type_3_(index, t){
- atomic{
-printf("Enter function handle__publish_qos2_Type_3_\n");
-        localClientId = Clients[index].clientId;
-        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
-        if
-            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientIndex = index;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].origin = 1;
-                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
             :: else ->
                 printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
         fi;
-
-
-        PUBLISH_end();
-
-}
-}
-
-inline handle__publish_qos2_Type_4(index, t){
- atomic{
-printf("Enter function handle__publish_qos2_Type_4\n");
-        authorization_result = false;
-        Authorization_publish_allowed(index, t, authorization_result);
-        if
-            :: (authorization_result == false) ->
-                printf("Authorization failed!\n");
-                goto LABEL_6_Type_4
-            :: else -> skip;
-        fi;
-        localClientId = Clients[index].clientId;
-        printf("PUBLISHER_%d: publish a QoS2 message\n", index);
-        if
-            :: Sessions[localClientId].messagesLen < MAXMESSAGES ->
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].topic = t;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].QoS = 2;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientId = localClientId;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].srcClientIndex = index;
-                Sessions[localClientId].messages[Sessions[localClientId].messagesLen].origin = 1;
-                Sessions[localClientId].messagesLen = Sessions[localClientId].messagesLen + 1;
-            :: else ->
-                printf("Publisher_%d: can not store more qos1,2 messages\n", localClientId);
-        fi;
-
-LABEL_6_Type_4:
- skip; 
-
         PUBLISH_end();
 
 }
@@ -612,44 +587,49 @@ printf("Enter function handle__publish_qos0_retained_Type_7\n");
         printf("PUBLISHER_%d: publish a QoS0 retained message\n", index);
         Message message;
         message.topic = t;
+        message.mid = GlobalMid;
+        GlobalMid = GlobalMid + 1;
         message.QoS = 0;
         message.srcClientId = localClientId;
         message.srcClientIndex = index;
+        printf("Message_%d: Retained message created!\n", message.mid);
         authorization_result = false;
         Authorization_publish_allowed(index, t, authorization_result);
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_8_Type_7
+                goto LABEL_7_Type_7
             :: else -> skip;
         fi;
         Deliver_to_Subscribers(message);
         RetainedMessages.topic = t;
+        RetainedMessages.mid = message.mid;
         RetainedMessages.QoS = 0;
         RetainedMessages.srcClientId = localClientId;
-        RetainedMessages.srcClientIndex = index;
-LABEL_8_Type_7:
+LABEL_7_Type_7:
  skip; 
 
+        RetainedMessages.srcClientIndex = index;
         PUBLISH_end();
 
 }
 }
 
-inline handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44(index){
+inline handle__connect_cleanStartT_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47_Type_24_44(index){
  atomic{
-printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47_Type_24_44\n");
+printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47_Type_24_44\n");
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = true;
         printf("with cleanStart = true\n" );
 
 
 
-        
+        // oldsession，session
         i = 0;
         do
             :: i < MAXMESSAGES ->
                 Sessions[localClientId].messages[i].topic = -1;
+                Sessions[localClientId].messages[i].mid = -1;
                 Sessions[localClientId].messages[i].QoS = -1;
                 Sessions[localClientId].messages[i].srcClientId = -1;
                 Sessions[localClientId].messages[i].srcClientIndex = -1;
@@ -659,7 +639,7 @@ printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Ty
         od;  
         Sessions[localClientId].messagesLen = 0;
         i = 0;
-        
+        // 
         do
             :: i < MAXSUBSCRIPTIONS ->
                 Sessions[localClientId].subscriptions[i].topic = -1;
@@ -667,8 +647,9 @@ printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Ty
             :: else -> break;
         od;  
         Sessions[localClientId].subscriptionsLen = 0;
-        
+        // will message
         Sessions[localClientId].willmessage.topic = -1;
+        Sessions[localClientId].willmessage.mid = -1;
         Sessions[localClientId].willmessage.QoS = -1;
         Sessions[localClientId].willmessage.srcClientId = -1;
         Sessions[localClientId].willmessage.srcClientIndex = -1;
@@ -678,9 +659,9 @@ printf("Enter function handle__connect_cleanStartT_Type_0_4_12_16_32_34_38_40_Ty
 }
 }
 
-inline handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25(index){
+inline handle__connect_cleanStartT_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9_Type_25(index){
  atomic{
-printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29_Type_25\n");
+printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9_Type_25\n");
         if
             :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
                 Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
@@ -692,11 +673,12 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
 
 
 
-        
+        // oldsession，session
         i = 0;
         do
             :: i < MAXMESSAGES ->
                 Sessions[localClientId].messages[i].topic = -1;
+                Sessions[localClientId].messages[i].mid = -1;
                 Sessions[localClientId].messages[i].QoS = -1;
                 Sessions[localClientId].messages[i].srcClientId = -1;
                 Sessions[localClientId].messages[i].srcClientIndex = -1;
@@ -706,7 +688,7 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
         od;  
         Sessions[localClientId].messagesLen = 0;
         i = 0;
-        
+        // 
         do
             :: i < MAXSUBSCRIPTIONS ->
                 Sessions[localClientId].subscriptions[i].topic = -1;
@@ -714,8 +696,9 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
             :: else -> break;
         od;  
         Sessions[localClientId].subscriptionsLen = 0;
-        
+        // will message
         Sessions[localClientId].willmessage.topic = -1;
+        Sessions[localClientId].willmessage.mid = -1;
         Sessions[localClientId].willmessage.QoS = -1;
         Sessions[localClientId].willmessage.srcClientId = -1;
         Sessions[localClientId].willmessage.srcClientIndex = -1;
@@ -725,9 +708,9 @@ printf("Enter function handle__connect_cleanStartT_Type_1_5_13_17_Type_2_14_33_3
 }
 }
 
-inline handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47(index){
+inline handle__connect_cleanStartF_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47(index){
  atomic{
-printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Type_18_22_26_30_41_43_45_47\n");
+printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_18_22_26_30_32_34_38_40_41_43_45_47\n");
         localClientId = Clients[index].clientId;
         Sessions[localClientId].cleanStart = false;
         printf("with cleanStart = false\n" );
@@ -736,7 +719,7 @@ printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Ty
         do
             :: i < MAXMESSAGES ->
                 if
-                    
+                    // Broker，Broker
                     :: (Sessions[localClientId].messages[i].topic != -1 && Sessions[localClientId].messages[i].origin == 0) ->
                         if
                             :: (Sessions[localClientId].messages[i].QoS == 0) ->
@@ -745,10 +728,11 @@ printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Ty
                             :: else ->
                                 Message message;
                                 message.topic = Sessions[localClientId].messages[i].topic;
+                                message.mid = Sessions[localClientId].messages[i].mid;
                                 message.QoS = Sessions[localClientId].messages[i].QoS;
                                 message.srcClientId = Sessions[localClientId].messages[i].srcClientId;
                                 message.srcClientIndex = Sessions[localClientId].messages[i].srcClientIndex;
-                                Deliver(message, localClientId);
+                                Deliver(Sessions[localClientId].messages[i], localClientId);
                         fi;
                     :: (Sessions[localClientId].messages[i].topic != -1 && Sessions[localClientId].messages[i].origin == 1 && (Sessions[localClientId].messages[i].QoS == 0 || Sessions[localClientId].messages[i].QoS == 1)) ->
                         printf("Bad QoS0 or QoS1 message stored in session from publisher!\n");
@@ -764,9 +748,9 @@ printf("Enter function handle__connect_cleanStartF_Type_0_4_12_16_32_34_38_40_Ty
 }
 }
 
-inline handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29(index){
+inline handle__connect_cleanStartF_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9(index){
  atomic{
-printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_39_Type_3_15_Type_6_10_35_37_Type_7_11_Type_8_36_Type_9_Type_19_23_27_31_Type_20_28_42_46_Type_21_29\n");
+printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_19_23_27_31_Type_2_6_10_14_20_28_33_35_37_39_42_46_Type_3_7_11_15_21_29_Type_8_36_Type_9\n");
         if
             :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
                 Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
@@ -780,7 +764,7 @@ printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_3
         do
             :: i < MAXMESSAGES ->
                 if
-                    
+                    // Broker，Broker
                     :: (Sessions[localClientId].messages[i].topic != -1 && Sessions[localClientId].messages[i].origin == 0) ->
                         if
                             :: (Sessions[localClientId].messages[i].QoS == 0) ->
@@ -789,10 +773,11 @@ printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_3
                             :: else ->
                                 Message message;
                                 message.topic = Sessions[localClientId].messages[i].topic;
+                                message.mid = Sessions[localClientId].messages[i].mid;
                                 message.QoS = Sessions[localClientId].messages[i].QoS;
                                 message.srcClientId = Sessions[localClientId].messages[i].srcClientId;
                                 message.srcClientIndex = Sessions[localClientId].messages[i].srcClientIndex;
-                                Deliver(message, localClientId);
+                                Deliver(Sessions[localClientId].messages[i], localClientId);
                         fi;
                     :: (Sessions[localClientId].messages[i].topic != -1 && Sessions[localClientId].messages[i].origin == 1 && (Sessions[localClientId].messages[i].QoS == 0 || Sessions[localClientId].messages[i].QoS == 1)) ->
                         printf("Bad QoS0 or QoS1 message stored in session from publisher!\n");
@@ -811,12 +796,18 @@ printf("Enter function handle__connect_cleanStartF_Type_1_5_13_17_Type_2_14_33_3
 inline handle__disconnect_Type_0(index){
  atomic{
 printf("Enter function handle__disconnect_Type_0\n");
+        if
+            :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
+                Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
+            :: else -> skip;
+        fi;
         localClientId = Clients[index].clientId;
         if
             :: Sessions[localClientId].connected == true ->
                 if
                     :: Sessions[localClientId].willmessage.topic != -1 ->
                         Sessions[localClientId].willmessage.topic = -1;
+                        Sessions[localClientId].willmessage.mid = -1;
                         Sessions[localClientId].willmessage.QoS = -1;
                         Sessions[localClientId].willmessage.srcClientId = -1;
                         Sessions[localClientId].willmessage.srcClientIndex = -1;
@@ -826,7 +817,7 @@ printf("Enter function handle__disconnect_Type_0\n");
                 Sessions[localClientId].connected = false;
                 Clients[index].connected = false;
             :: else -> printf("WRONG: %d has not connected to the broker!", index);
-                
+                //assert(false);
         fi;
         DISCONNECT_end();
 
@@ -841,12 +832,18 @@ printf("Enter function handle__disconnect_Type_1\n");
                 Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
             :: else -> skip;
         fi;
+        if
+            :: Sessions[Clients[index].clientId].willmessage.topic != -1 ->
+                Deliver_to_Subscribers(Sessions[Clients[index].clientId].willmessage);
+            :: else -> skip;
+        fi;
         localClientId = Clients[index].clientId;
         if
             :: Sessions[localClientId].connected == true ->
                 if
                     :: Sessions[localClientId].willmessage.topic != -1 ->
                         Sessions[localClientId].willmessage.topic = -1;
+                        Sessions[localClientId].willmessage.mid = -1;
                         Sessions[localClientId].willmessage.QoS = -1;
                         Sessions[localClientId].willmessage.srcClientId = -1;
                         Sessions[localClientId].willmessage.srcClientIndex = -1;
@@ -856,7 +853,7 @@ printf("Enter function handle__disconnect_Type_1\n");
                 Sessions[localClientId].connected = false;
                 Clients[index].connected = false;
             :: else -> printf("WRONG: %d has not connected to the broker!", index);
-                
+                //assert(false);
         fi;
         DISCONNECT_end();
 
@@ -867,23 +864,20 @@ inline handle__pubrel_Type_0(index){
  atomic{
 printf("Enter function handle__pubrel_Type_0\n");
         localClientId = Clients[index].clientId;
-        short lastMessage = 0;
         if
             :: (Sessions[localClientId].messagesLen > 0) ->
                 lastMessage = Sessions[localClientId].messagesLen - 1;
                 if
                     :: (Sessions[localClientId].messages[lastMessage].topic != -1 && Sessions[localClientId].messages[lastMessage].QoS == 2) ->
-                        Message message;
-                        message.topic = Sessions[localClientId].messages[lastMessage].topic;
-                        message.QoS = Sessions[localClientId].messages[lastMessage].QoS;
-                        message.srcClientId = localClientId;
-                        message.srcClientIndex = index;
-
-                        Deliver_to_Subscribers(message)
+                        /***
+                        UPDATE
+                        ***/
+                        //Deliver_to_Subscribers(Sessions[localClientId].messages[lastMessage])
                     :: else -> skip;  
                 fi;
 
                 Sessions[localClientId].messages[lastMessage].topic = -1;
+                Sessions[localClientId].messages[lastMessage].mid = -1;
                 Sessions[localClientId].messages[lastMessage].QoS = -1;
                 Sessions[localClientId].messages[lastMessage].srcClientId = -1;
                 Sessions[localClientId].messages[lastMessage].srcClientIndex = -1;
@@ -905,7 +899,7 @@ printf("Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14\n");
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_33_Type_2_3_4_5_7_8_9_10_11_12_13_14
+                goto LABEL_22_Type_2_3_4_5_7_8_9_10_11_12_13_14
             :: else -> skip;
         fi;
         localClientId = Clients[index].clientId;
@@ -915,23 +909,29 @@ printf("Enter function handle__subscribe_Type_2_3_4_5_7_8_9_10_11_12_13_14\n");
                 Sessions[localClientId].subscriptionsLen = Sessions[localClientId].subscriptionsLen + 1;
                 if
                     :: (RetainedMessages.topic != -1 && RetainedMessages.topic == t) ->
+                        Message message;
+                        message.topic = RetainedMessages.topic;
+                        message.mid = RetainedMessages.mid;
+                        message.QoS = RetainedMessages.QoS;
+                        message.srcClientId = RetainedMessages.srcClientId;
+                        message.srcClientIndex = RetainedMessages.srcClientId;
         authorization_result = false;
         Authorization_read_allowed(index, t, authorization_result);
         if
             :: (authorization_result == false) ->
                 printf("Authorization failed!\n");
-                goto LABEL_34_Type_2_3_4_5_7_8_9_10_11_12_13_14
+                goto LABEL_23_Type_2_3_4_5_7_8_9_10_11_12_13_14
             :: else -> skip;
         fi;
-                        Deliver(RetainedMessages, localClientId);
-LABEL_34_Type_2_3_4_5_7_8_9_10_11_12_13_14:
+                        Deliver(message, localClientId);
+LABEL_23_Type_2_3_4_5_7_8_9_10_11_12_13_14:
  skip; 
 
                     :: else -> skip;
                 fi;
             :: else -> skip;
         fi;
-LABEL_33_Type_2_3_4_5_7_8_9_10_11_12_13_14:
+LABEL_22_Type_2_3_4_5_7_8_9_10_11_12_13_14:
  skip; 
 
         SUBSCRIBE_end(index, t);
@@ -965,10 +965,10 @@ inline ACL_revoke_Type_0(index, revokeAcl){
  atomic{
 printf("Enter function ACL_revoke_Type_0\n");
         if
-            
+            // SUBSCRIBEACL = 1
             :: (revokeAcl == SUBSCRIBEACL && (Clients[index].acl & SUBSCRIBEACL) == SUBSCRIBEACL) ->
                 Clients[index].acl = Clients[index].acl - SUBSCRIBEACL;
-            
+            // PUBLISHACL = 2
             :: (revokeAcl == PUBLISHACL && (Clients[index].acl & PUBLISHACL) == PUBLISHACL) ->
                 Clients[index].acl = Clients[index].acl - PUBLISHACL;
             :: (revokeAcl == READACL && (Clients[index].acl & READACL) == READACL) ->
@@ -980,10 +980,10 @@ printf("Enter function ACL_revoke_Type_0\n");
             :: else -> skip;
         fi;
         if
-            
+            // SUBSCRIBEACL = 1
             :: (revokeAcl == SUBSCRIBEACL && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL) ->
                 Clients[index].aclTruth = Clients[index].aclTruth - SUBSCRIBEACL;
-            
+            // PUBLISHACL = 2
             :: (revokeAcl == PUBLISHACL && (Clients[index].aclTruth & PUBLISHACL) == PUBLISHACL) ->
                 Clients[index].aclTruth = Clients[index].aclTruth - PUBLISHACL;
             :: (revokeAcl == READACL && (Clients[index].aclTruth & READACL) == READACL) ->
@@ -998,28 +998,29 @@ printf("Enter function ACL_revoke_Type_0\n");
 }
 }
 
-inline Deliver(message, subscriber){
+inline Deliver(msg, subscriber){
     atomic{
         bool flag = false;
         if
-            :: (message.srcClientId != -1) ->
+            :: (msg.srcClientId != -1) ->
                 if
-                    :: (message.retained == true) ->
+                    :: (msg.retained == true) ->
                         if
-                            :: (((Clients[message.srcClientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
+                            :: (((Clients[msg.srcClientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
                                 flag = true;
                             :: else -> skip;
                         fi;
                     :: else ->
                         if
-                            :: (((Clients[Sessions[message.srcClientId].clientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
+                            :: (((Clients[Sessions[msg.srcClientId].clientIndex].aclTruth & PUBLISHACL) == PUBLISHACL) &&  ((Clients[Sessions[subscriber].clientIndex].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL)) ->
                                 flag = true;
                             :: else -> skip;
                         fi;
                 fi;
             :: else -> skip;
         fi;
-        printf("Message Delivery: Topic = %d; QoS = %d; FROM = SESSION_%d; TO = SESSION_%d\n", message.topic, message.QoS, message.srcClientId, subscriber);
+        printf("Message_%d: Message Delivered!\n", msg.mid);
+        printf("Message Delivery: Topic = %d; QoS = %d; FROM = SESSION_%d; TO = SESSION_%d\n", msg.topic, msg.QoS, msg.srcClientId, subscriber);
         assert(flag == true);
     }
 }
@@ -1031,24 +1032,35 @@ proctype ProcessPublisher2(short index){
     short localClientId;
     bool authorization_result = false;
     short publishedMessages = 0;
-    
+    // 、、
     short canConnect = 2;
-    
-    bool badReconnect = false;
     do
-        :: (Clients[index].connected == false && Sessions[Clients[index].clientId].connected == true) ->
+        :: 
             atomic{
-                printf("PUBLISHER_%d: send 'CONNCET' with {username:`%d`, password:`%d`, clientId:`%d`}\n", index, Clients[index].username, Clients[index].password, Clients[index].clientId);
-                CONNECT_entry_point(index);
-                printf("PUBLISHER_%d: connected\n", index);
-                canConnect = canConnect - 1;
-                badReconnect = true;
+                if
+                    ::(Clients[index].connected == false && Sessions[Clients[index].clientId].connected == true&& BadDisconnect == false) ->
+                    
+                        printf("PUBLISHER_%d: send 'CONNCET' with {username:`%d`, password:`%d`, clientId:`%d`}\n", index, Clients[index].username, Clients[index].password, Clients[index].clientId);
+                        CONNECT_entry_point(index);
+                        printf("PUBLISHER_%d: connected\n", index);
+                        canConnect = canConnect - 1;
+                        hijacked = true;
+                fi;
             }
-        :: (Clients[index].connected == false && Sessions[Clients[index].clientId].connected == false) ->
+        :: 
             atomic{
-                skip;
+                if        
+                    ::(Clients[index].connected == false && Sessions[Clients[index].clientId].connected == false) ->
+                        skip;
+                fi;
             }
-        :: else -> break;
+        :: 
+            atomic{
+                if        
+                    ::(Clients[index].connected == true) ->
+                        break;
+                fi;
+            }
     od;
 
 }
@@ -1058,23 +1070,21 @@ proctype ProcessPublisher(short index){
     short i = 0;
     short j = 0;
     short localClientId;
+    short lastMessage = 0;
     bool authorization_result = false;
     short publishedMessages = 0;
-    
+    // 、、
     short canConnect = 2;
-    
-    bool badReconnect = false;
     do
         ::
             atomic{
                 if
-                    :: (Clients[index].connected == false && canConnect >= 0 && badReconnect == false) ->
+                    :: (Clients[index].connected == false && canConnect >= 0 && BadDisconnect == false && hijacked == false) ->
                         printf("PUBLISHER_%d: send 'CONNCET' with {username:`%d`, password:`%d`, clientId:`%d`}\n", index, Clients[index].username, Clients[index].password, Clients[index].clientId);
                         CONNECT_entry_point(index);
                         printf("PUBLISHER_%d: connected\n", index);
                         canConnect = canConnect - 1;
-                        badReconnect = true;
-                        BadDisconnect = false;
+                        BadDisconnect = true;
                 fi;
             }
         :: 
@@ -1084,38 +1094,41 @@ proctype ProcessPublisher(short index){
                         PUBLISH_entry_point(Clients[index].clientId, 0); 
                         publishedMessages = publishedMessages + 1;
                         BadDisconnect = false;
-                        badReconnect = false;
+
                 fi;
             }
         :: 
             atomic{ 
                 if
-                   ::  (Clients[index].connected == true  && Sessions[Clients[index].clientId].messagesLen > 0) -> 
+                   ::  (Clients[index].connected == true && Sessions[Clients[index].clientId].messagesLen > 0) -> 
                         printf("PUBLISHER_%d: send 'PUBREL'\n", index);
                         PUBREL_entry_point(index); 
                         printf("PUBLISHER_%d: pubrel complete\n", index);
                         BadDisconnect = false;
-                        badReconnect = false;
+
                 fi;
             }
         :: 
             atomic{ 
                 if
-                    ::  (Clients[index].connected == true && badReconnect == false) -> 
+                    ::  (Clients[index].connected == true && BadDisconnect == false) -> 
                         printf("PUBLISHER_%d: send 'DISCONNECT'\n", index);
                         DISCONNECT_entry_point(index); 
                         printf("PUBLISHER_%d: disconnected\n", index);
-                        BadDisconnect = false;
                         canConnect = canConnect - 1;
+                        BadDisconnect = true;
                 fi;
             }
-
+        /*
+            TODO: ACL
+        */
         ::
-            atomic{ 
+            atomic{
                 if
                     :: (Clients[index].connected == true && (Clients[index].aclTruth & PUBLISHACL) == PUBLISHACL) ->
                         ACL_revoke(index, PUBLISHACL);
                         printf("PUBLISHER_%d: revoke PUBLISHACL\n", index);
+                        BadDisconnect = false;
                 fi;
             }
 
@@ -1127,46 +1140,59 @@ proctype ProcessSubscriber(short index){
     short i = 0;
     short j = 0;
     short localClientId;
+    short lastMessage = 0;
     bool authorization_result = false;
-    
+    // 、、
     short canConnect = 2;
-    
-    bool badReconnect = false;
+
     do
-        :: (Clients[index].connected == false && canConnect >= 0 && badReconnect == false && BadDisconnect == false) ->
+        :: (Clients[index].connected == false && canConnect >= 0 && BadDisconnect == false) ->
             atomic{
                 printf("SUBSCRIBER_%d: send 'CONNCET' with {username:`%d`, password:`%d`, clientId:`%d`}\n", index, Clients[index].username, Clients[index].password, Clients[index].clientId);
                 CONNECT_entry_point(index);
                 printf("SUBSCRIBER_%d: connected\n", index);
                 canConnect = canConnect - 1;
-                badReconnect = true;
+                BadDisconnect = true;
             }
-
-        :: (Clients[index].connected == true) ->
-            if
-                ::  (Sessions[Clients[index].clientId].subscriptionsLen < MAXSUBSCRIPTIONS) -> 
-                    atomic{ 
+        :: 
+            atomic{ 
+                if
+                   ::  (Clients[index].connected == true  && Sessions[Clients[index].clientId].subscriptionsLen < MAXSUBSCRIPTIONS) -> 
                         printf("SUBSCRIBER_%d: send 'SUBSCRIBE'\n", index);
                         SUBSCRIBE_entry_point(index, 0); 
                         printf("SUBSCRIBER_%d: subscribed\n", index);
-                        badReconnect = false;
-                    }
-                ::  (badReconnect == false) -> 
-                    atomic{ 
+                        BadDisconnect = false;
+
+                fi;
+            }
+        :: 
+            atomic{ 
+                if
+                    ::  (Clients[index].connected == true && BadDisconnect == false) -> 
                         printf("SUBSCRIBER_%d: send 'DISCONNECT'\n", index);
                         DISCONNECT_entry_point(index); 
                         printf("SUBSCRIBER_%d: disconnected\n", index);
                         canConnect = canConnect - 1;
                         BadDisconnect = true;
-                    }
-
-                :: (Clients[index].aclTruth != 0 && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL) -> 
-                    atomic{ 
+                fi;
+            }
+        /*
+            TODO: ACL
+        */
+        ::
+            atomic{
+                if
+                    :: (Clients[index].connected == true && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL && (Clients[index].aclTruth & READACL) == READACL) ->
+                        /***
+                        UPDATE
+                        ***/                    
                         ACL_revoke(index, SUBSCRIBEACL);
+                        ACL_revoke(index, READACL);
                         printf("SUBSCRIBER_%d: revoke SUBSCRIBEACL\n", index);
-                    }
-                :: else -> skip;
-            fi;
+                        BadDisconnect = false;
+                fi;
+            }
+
         :: else -> break;
     od;
 }
@@ -1178,11 +1204,13 @@ init {
         do
             :: (m < MAXCLIENTS) ->
                 Clients[m].connected = false;
-                Clients[m].acl = PUBLISHACL + SUBSCRIBEACL + READACL;
                 m = m + 1;
             :: else -> break;
         od;
         BadDisconnect = false;
+        hijacked = false;
+        GlobalMid = 0;
+
         Clients[0].username = 0;
         Clients[0].password = 0;
         Clients[0].clientId = PUBCLIENTID_0;
@@ -1194,8 +1222,8 @@ init {
         Clients[2].username = 2;
         Clients[2].password = 2;
         Clients[2].clientId = PUBCLIENTID_0;
-        Clients[2].acl = SUBSCRIBEACL;
-        Clients[2].aclTruth = SUBSCRIBEACL;
+        Clients[2].acl = 0;
+        Clients[2].aclTruth = 0;
     }
 
     run ProcessPublisher(0);

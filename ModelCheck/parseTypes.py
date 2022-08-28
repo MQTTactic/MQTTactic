@@ -2,12 +2,16 @@ import re
 import os
 import sys
 import json
+
 from nbformat import read
 from sqlalchemy import false
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
+
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
-handlers = {"handle__publish": ('qos0', 'qos1', 'qos2', 'qos0_retained'), "handle__pubrel": (), "handle__subscribe": (), "handle__connect": ('cleanStartT', 'cleanStartF'), "handle__disconnect": (), "handle__unsubscribe": (), "handle__ACL_revoke": ()}
+
+handlers = {"handle__publish": ('qos0', 'qos1', 'qos2', 'qos0_retained'), "handle__pubrel": (), "handle__subscribe": (), "handle__connect": ('cleanStartT', 'cleanStartF'), "handle__disconnect": (), "handle__unsubscribe": (), "handle__revoke": ()}
+
 mosquitto_config = {
     "handle__publish": config["handle__publish"],
     "handle__pubrel": config["handle__pubrel"],
@@ -15,13 +19,18 @@ mosquitto_config = {
     "handle__unsubscribe": config["handle__unsubscribe"],
     "handle__connect": config["handle__connect"],
     "handle__disconnect": config["handle__disconnect"],
-    "handle__ACL_revoke": config["handle__ACL_revoke"]
+    "handle__revoke": config["handle__revoke"]
 }
+
 output = open("./pathTypes.py", 'w')
 output.write("pathTypes = {")
+
 for h in handlers:
     pathTypes = {}
     pathIdx = {}
+
+    if not os.path.exists(f"./SymbolicExecutionResults/{h}.type"):
+        continue
     with open(f"./SymbolicExecutionResults/{h}.type") as f:
         read_str = f.readline()
         type_idx = 0
@@ -33,6 +42,7 @@ for h in handlers:
                 type_idx = a[0]
             if (b != []):
                 type = b[0].replace(f'Type-{type_idx}', 'Type-').replace(' ', '')
+                # FlashMQ send__xxack
                 op_list = json.loads("[" + type.replace("'", '"') + "]")
                 op_list_result = []
                 for idx, t in enumerate(op_list):
@@ -42,12 +52,16 @@ for h in handlers:
                             continue
                     op_list_result.append(t)
                 type = json.dumps(op_list_result)[1:-1]
+                # re.sub(f'\'({config["send__connack"]}|{config["send__puback"]}|{config["send__pubrec"]}|{config["send__pubcomp"]}|{config["send__suback"]}|{config["send__unsuback"]})')
+                # type = type.replace(f"packet_id);','deliver", "packet_id);deliver")
                 pathIdx[type_idx] = type
+
                 if (type not in list(pathTypes.keys())):
                     pathTypes[type] = [type_idx]
                 else:
                     pathTypes[type].append(type_idx)
             read_str = f.readline()
+
     if (handlers[h] != ()):
         for constrain in handlers[h]:
             key = f"{h}_{constrain}"
@@ -61,7 +75,7 @@ for h in handlers:
                                 idx.append(i)
                 if (idx != []):
                     x = ty.replace('Type-', f"Type-{','.join(idx)}")
-                    output.write(f'({x}),')
+                    output.write(f'({x},),')
             output.write("],")
     else:
         key = h
