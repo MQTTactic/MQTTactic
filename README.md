@@ -51,7 +51,7 @@ gcc -DMEMLIM=16384 -DVECTORSZ=4096 -O2 -DXUSAFE -DSAFETY -DNOCLAIM -DBITSTATE -w
 ### 0x04 Proof of Concept (PoC)
 
 #### PoC exploit on Flaw 1
-<img src="Figures/Fig_flaw_pubrel_qos2.png" alt="Flaw 1" style="zoom: 30%;" />
+<img src="Figures/Fig_flaw_pubrel_qos2.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $A_1$ -> $A_2$ -> $S_4$ -> $C_2$ -> $S_5$
 
@@ -79,7 +79,7 @@ door was unlocked successfully after receiving the command
 in the QoS 2 message M.
 
 #### PoC exploit on Flaw 2
-<img src="Figures/Fig_flaw_QoS1_retry.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_QoS1_retry.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $A_1$ -> $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $S_4$ -> $A_2$ -> $A_3$ -> $S_5$ -> $S_6$
 
@@ -110,7 +110,7 @@ malicious guest was able to leverage Flaw 2 to unlock a
 smart door that he was not entitled to control.
 
 #### PoC exploit on Flaw 3
-<img src="Figures/Fig_flaw_QoS2_retry.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_QoS2_retry.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $A_1$ -> $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $S_4$ -> $A_2$ -> $A_3$ -> $S_5$ -> $S_6$ -> $S_7$ -> $S_8$
 
@@ -125,7 +125,7 @@ the Flaw 2. The exploiting and mitigation to the Flaw
 
 
 #### PoC exploit on Flaw 4
-<img src="Figures/Fig_flaw_alias.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_alias.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $A_1$ -> $S_4$ -> $S_5$
 
@@ -147,7 +147,7 @@ sage sent by the unauthorized malicious user only with the
 topic alias ($S_4$ -> $S_5$).
 
 #### PoC exploit on Flaw 5
-<img src="Figures/Fig_flaw_clientID_hijack.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_clientID_hijack.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $A_1$ -> $S_4$ -> $C_2$ -> $S_5$
 
@@ -165,7 +165,7 @@ malicious user), the Mosquitto broker allowed the delivery
 of the Will message ($S_4$).
 
 #### PoC exploit on Flaw 6
-<img src="Figures/Fig_flaw_no_check_will_msg.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_no_check_will_msg.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 > $S_1$ -> $S_2$ -> $S_3$ -> $A_1$ -> $S_4$
 
@@ -181,7 +181,7 @@ of the attacker client ($A_1$), the victim client received the
 “unlocking” command successfully.
 
 #### PoC exploit on Flaw 7
-<img src="Figures/Fig_flaw_two_queues.png" alt="Flaw 1" style="zoom:67%;" />
+<img src="Figures/Fig_flaw_two_queues.png" alt="Flaw 1" align="left" height=40% width=40% />
 
 We confirmed Flaw 7 on Mosquitto
 (capacity of InflightQueue n = 20 by default) following
@@ -200,14 +200,19 @@ Unauthorized subscription via ClientID hijacking; Flaw
 10: Un-updated subscription; Flaw 11: Unauthorized trigger
 of the Will message.
 
+
 * **Flaw 8**
-<img src="Figures/Fig_flaw_clientID_hijack_recover_subscription.png" alt="Flaw 8" style="zoom:67%;" />
+  
+<img src="Figures/Fig_flaw_clientID_hijack_recover_subscription.png" alt="Flaw 8" align="left" height=40% width=40% />
 
 * **Flaw 9**
-<img src="Figures/Fig_flaw_retained_message.png" alt="Flaw 9" style="zoom:67%;" />
+  
+<img src="Figures/Fig_flaw_retained_message.png" alt="Flaw 9" align="left" height=40% width=40% />
 
 * **Flaw 10**
-<img src="Figures/Fig_flaw_read_permission_left.png" alt="Flaw 10" style="zoom:67%;" />
+  
+<img src="Figures/Fig_flaw_read_permission_left.png" alt="Flaw 10" align="left" height=40% width=40% />
 
 * **Flaw 11**
-<img src="Figures/Fig_flaw_will_message.png" alt="Flaw 11" style="zoom:67%;" />
+  
+<img src="Figures/Fig_flaw_will_message.png" alt="Flaw 11" align="left" height=40% width=40% />
