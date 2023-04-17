@@ -51,7 +51,7 @@ gcc -DMEMLIM=16384 -DVECTORSZ=4096 -O2 -DXUSAFE -DSAFETY -DNOCLAIM -DBITSTATE -w
 ### 0x04 Proof of Concept (PoC)
 
 #### PoC exploit on Flaw 1
-<img src="Figures/Fig_flaw_pubrel_qos2.png" alt="Flaw 1" style="zoom: 67%;" />
+<img src="Figures/Fig_flaw_pubrel_qos2.png" alt="Flaw 1" style="zoom: 30%;" />
 
 > $S_1$ -> $C_1$ -> $S_2$ -> $S_3$ -> $A_1$ -> $A_2$ -> $S_4$ -> $C_2$ -> $S_5$
 
