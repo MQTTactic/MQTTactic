@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- 由 Microsoft Visio, SVG Export 生成 Fig_architecture.svg Page-1 -->
+<!--  Microsoft Visio, SVG Export  Fig_architecture.svg Page-1 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
 		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="6.09714in" height="2.55941in"
 		viewBox="0 0 438.994 184.277" xml:space="preserve" color-interpolation-filters="sRGB" class="st17">
@@ -50,12 +50,12 @@
 		</marker>
 	</defs>
 	<g v:mID="4" v:index="1" v:groupContext="foregroundPage">
-		<title>页-1</title>
+		<title>-1</title>
 		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
 				v:shadowOffsetY="-8.50394"/>
-		<v:layer v:name="连接线" v:index="0"/>
+		<v:layer v:name="" v:index="0"/>
 		<g id="shape54-1" v:mID="54" v:groupContext="shape" transform="translate(263.116,-127.229)">
-			<title>工作表.54</title>
+			<title>.54</title>
 			<rect v:rectContext="foreign" x="0" y="150.267" width="37.4352" height="34.0108" class="st1"/>
 			<image x="0" y="150.267" width="37.4352" height="34.0108" preserveAspectRatio="none" xlink:href="data:image/png;base64,
 						iVBORw0KGgoAAAANSUhEUgAAAeEAAAG1CAYAAADOVUzvAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0
@@ -868,11 +868,11 @@
 			<rect x="0" y="160.666" width="79.3701" height="23.6109" class="st2"/>
 			<text x="14.83" y="175.47" class="st3" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Flaw Report</text>		</g>
 		<g id="shape14-16" v:mID="14" v:groupContext="shape" v:layerMember="0" transform="translate(225.528,-85.9257)">
-			<title>动态连接线.188</title>
+			<title>.188</title>
 			<path d="M-6.94 192.46 L-6.95 192.82 L-7.32 227" class="st5"/>
 		</g>
 		<g id="shape22-22" v:mID="22" v:groupContext="shape" v:layerMember="0" transform="translate(378.247,-43.8387)">
-			<title>动态连接线.264</title>
+			<title>.264</title>
 			<path d="M-7.09 176.1 L-7.09 175.74 L-7.09 142.57" class="st7"/>
 		</g>
 		<g id="shape26-27" v:mID="26" v:groupContext="shape" transform="translate(87.2836,-19.5951)">
@@ -883,11 +883,11 @@
 			<rect x="0" y="175.467" width="67.8898" height="8.81008" class="st8"/>
 			<text x="5.89" y="182.87" class="st3" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Configuration</text>		</g>
 		<g id="shape25-30" v:mID="25" v:groupContext="shape" v:layerMember="0" transform="translate(45.7333,-85.3588)">
-			<title>动态连接线.25</title>
+			<title>.25</title>
 			<path d="M7.09 192.46 L7.09 192.82 L7.09 226.43" class="st7"/>
 		</g>
 		<g id="shape43-35" v:mID="43" v:groupContext="shape" transform="translate(18.875,-62.1147)">
-			<title>工作表.43</title>
+			<title>.43</title>
 			<rect x="0" y="80.9897" width="401.244" height="103.288" rx="11.3386" ry="11.3386" class="st9"/>
 		</g>
 		<g id="shape2-37" v:mID="2" v:groupContext="shape" transform="translate(193.408,-85.9257)">
@@ -934,15 +934,15 @@
 			<text x="4.14" y="169.47" class="st10" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Counterexample <tspan
 						x="5.11" dy="1.2em" class="st4">Analyzer (CEA)</tspan></text>		</g>
 		<g id="shape18-52" v:mID="18" v:groupContext="shape" v:layerMember="0" transform="translate(193.408,-138.52)">
-			<title>动态连接线.250</title>
+			<title>.250</title>
 			<path d="M-8.18 177.19 L-8.54 177.19 L-50.98 177.19" class="st7"/>
 		</g>
 		<g id="shape23-57" v:mID="23" v:groupContext="shape" v:layerMember="0" transform="translate(364.074,-109.926)">
-			<title>动态连接线.265</title>
+			<title>.265</title>
 			<path d="M7.09 176.1 L7.09 175.74 L7.09 160.4" class="st7"/>
 		</g>
 		<g id="shape1-62" v:mID="1" v:groupContext="shape" transform="translate(26.812,-85.9257)">
-			<title>工作表.1</title>
+			<title>.1</title>
 			<rect x="0" y="112.791" width="131.102" height="71.4859" class="st11"/>
 		</g>
 		<g id="shape5-64" v:mID="5" v:groupContext="shape" transform="translate(29.9301,-104.144)">
@@ -967,14 +967,14 @@
 			<text x="20.33" y="179.95" class="st10" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Model <tspan
 						class="st4" v:langID="1033">Tailor</tspan> (MT)</text>		</g>
 		<g id="shape7-71" v:mID="7" v:groupContext="shape" transform="translate(32.2687,-85.9257)">
-			<title>工作表.7</title>
+			<title>.7</title>
 			<desc>Model Generator (MG)</desc>
 			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
 			<v:textRect cx="57.2598" cy="177.941" width="114.52" height="12.6725"/>
 			<rect x="0" y="171.605" width="114.52" height="12.6725" class="st1"/>
 			<text x="7" y="180.94" class="st10" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Model Generator (MG)</text>		</g>
 		<g id="shape30-74" v:mID="30" v:groupContext="shape" v:layerMember="0" transform="translate(76.9852,-137.002)">
-			<title>动态连接线</title>
+			<title></title>
 			<path d="M7.09 191.02 L7.09 191.38 L7.09 202.09" class="st13"/>
 		</g>
 		<g id="shape32-80" v:mID="32" v:groupContext="shape" transform="translate(256.769,-85.9257)">
@@ -989,32 +989,32 @@
 			<text x="8.73" y="169.47" class="st3" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Security <tspan
 						x="8.17" dy="1.2em" class="st4">Property</tspan></text>		</g>
 		<g id="shape34-84" v:mID="34" v:groupContext="shape" v:layerMember="0" transform="translate(275.073,-128.186)">
-			<title>动态连接线.34</title>
+			<title>.34</title>
 			<path d="M7.09 192.46 L7.09 192.82 L7.09 202.93" class="st7"/>
 		</g>
 		<g id="shape37-89" v:mID="37" v:groupContext="shape" v:layerMember="0" transform="translate(266.38,-138.52)">
-			<title>动态连接线.37</title>
+			<title>.37</title>
 			<path d="M-8.18 177.19 L-8.54 177.19 L-22.19 177.19" class="st7"/>
 		</g>
 		<g id="shape38-94" v:mID="38" v:groupContext="shape" v:layerMember="0" transform="translate(331.476,-138.52)">
-			<title>动态连接线.38</title>
+			<title>.38</title>
 			<path d="M-8.18 177.19 L-8.54 177.19 L-34.35 177.19" class="st7"/>
 		</g>
 		<g id="shape39-99" v:mID="39" v:groupContext="shape" v:layerMember="0" transform="translate(193.408,-90.6446)">
-			<title>动态连接线.39</title>
+			<title>.39</title>
 			<path d="M0 177.19 L-28.32 177.19" class="st15"/>
 		</g>
 		<g id="group41-105" transform="translate(271.3,-115.385)" v:mID="41" v:groupContext="group">
-			<title>工作表.41</title>
+			<title>.41</title>
 			<g id="shape27-106" v:mID="27" v:groupContext="shape" transform="translate(-4.25197,-13.6979)">
-				<title>工作表.27</title>
+				<title>.27</title>
 				<desc>Model</desc>
 				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
 				<v:textRect cx="39.685" cy="180.617" width="79.38" height="7.32012"/>
 				<rect x="0" y="176.957" width="79.3701" height="7.32012" class="st8"/>
 				<text x="27.44" y="183.32" class="st12" v:langID="2052"><v:paragraph v:horizAlign="1"/><v:tabList/>Model  </text>			</g>
 			<g id="shape40-109" v:mID="40" v:groupContext="shape" transform="translate(1.77165,-5.61094)">
-				<title>工作表.40</title>
+				<title>.40</title>
 				<desc>Checker (MC)</desc>
 				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
 				<v:textRect cx="39.685" cy="180.617" width="79.38" height="7.32012"/>
@@ -1029,13 +1029,13 @@
 			<rect x="0" y="169.613" width="83.5512" height="14.6639" class="st8"/>
 			<text x="7.66" y="180.55" class="st16" v:langID="1033"><v:paragraph v:horizAlign="1"/><v:tabList/>MQTTactic</text>		</g>
 		<g id="shape50-115" v:mID="50" v:groupContext="shape" v:layerMember="0" transform="translate(114.142,-85.3588)">
-			<title>动态连接线.50</title>
+			<title>.50</title>
 			<path d="M7.09 192.46 L7.09 192.82 L7.09 222.44" class="st7"/>
 		</g>
 		<g id="group53-120" transform="translate(110.599,-27.9356)" v:mID="53" v:groupContext="group">
-			<title>工作表.53</title>
+			<title>.53</title>
 			<g id="shape24-121" v:mID="24" v:groupContext="shape">
-				<title>工作表.24</title>
+				<title>.24</title>
 				<rect v:rectContext="foreign" x="0" y="163.689" width="21.2598" height="20.5885" class="st1"/>
 				<image x="0" y="163.689" width="21.2598" height="20.5885" preserveAspectRatio="none" xlink:href="data:image/png;base64,
 							iVBORw0KGgoAAAANSUhEUgAAA1cAAAM8CAYAAAC78VppAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIA

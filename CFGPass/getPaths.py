@@ -195,11 +195,13 @@ for h in handlers:
     outputFile = open(f"{OUTPUTDIR}/{h}.type", 'w')
     for Type in results:
         bbPath = []
-        print(f"********************************Type-{str(results.index(Type))}********************************", file=outputFile)
+        print(f"********************************Type-{str(results.index(Type))}********************************",
+              file=outputFile)
         with open(DIR + "PATHS/" + h + "/Type-" + str(results.index(Type)), 'w', encoding="utf-8") as f:
             bbStack = []
             for bb in Type:
-                if (len(bbStack) >= 1 and bbStack[-1].split(':')[0] == bb.split(':')[0] and bbStack[-1].split(':')[1] == bb.split(':')[1]):
+                if (len(bbStack) >= 1 and bbStack[-1].split(':')[0] == bb.split(':')[0] and
+                        bbStack[-1].split(':')[1] == bb.split(':')[1]):
                     continue
                 if (len(bbStack) >= 1 and bbStack[-1].split(':')[0] == bb.split(':')[0]):
                     print(f"{bbStack[-1]} --> {bb}", file=outputFile)

@@ -7,7 +7,7 @@ config = {
     "handle__disconnect": "handle__disconnect",
     "handle__authorize": "",
     "handle__revoke": "",
-    "permission_check": "mosquitto_acl_check_default",
+    "permission_check": "mosquitto_acl_check",
     "subs": "mosquitto__subhier::subs",
     "RetainedMsg": "mosquitto_db::retains",
     "status": "mosquitto::state",

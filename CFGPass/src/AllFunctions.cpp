@@ -39,8 +39,6 @@ namespace
         return OS.str();
     }
 
-
-
     struct Hello : public FunctionPass
     {
         static char ID;
@@ -121,6 +119,10 @@ namespace
             //         << F.getName() << '\n';
             errs()
                 << F.getName() << '\n';
+
+            errs()
+                << llvm::demangle(F.getName().str()) << '\n';
+
             return false;
         }
     };

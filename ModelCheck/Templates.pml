@@ -558,7 +558,6 @@ proctype ProcessSubscriber(short index){
                         BadDisconnect = false;
                 fi;
             }
-
         :: else -> break;
     od;
 }
