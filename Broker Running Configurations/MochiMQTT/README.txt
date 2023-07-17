@@ -1,0 +1,1 @@
+MochiMQTT_session_take_over.zip中提供了视频演示，其他漏洞与视频中演示的操作类似，均为未授权访问漏洞。
