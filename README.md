@@ -5,7 +5,7 @@ The MQTTactic is our tool for evaluating the security of the MQTT Broker with st
 
 ### 0x01 LLVM IR generation
 
-We provide the detailed technical guidance and examples for LLVM IR generation online (https://github.com/MQTTactic/LLVM-IR-generation), which include environment configuration, all necessary commands to run the tool. The LLVM IR is the input of our MQTTactic.
+We provide the detailed technical guidance and examples for LLVM IR generation online (https://github.com/MQTTactic/LLVM-IR-generation), which include environment configuration, all necessary commands to run the tool. The LLVM IR is the input of MQTTactic.
 
 ### 0x02 Getting started
 #### 1. Install
@@ -43,7 +43,34 @@ gcc -DMEMLIM=16384 -DVECTORSZ=4096 -O2 -DXUSAFE -DSAFETY -DNOCLAIM -DBITSTATE -w
 ```
 
 
-### 0x03 A running example
+
+
+
+### 0x03 Challenges in different languages
+
+Here lie numerous challenges in employing static analysis to extract comprehensive control flow from LLVM IR. We will continuously update this space with the technical details of how we tackle them.
+
+#### C/C++
+
+-   [x] Function Pointers
+-   [ ] Virtual Function
+-   [ ] Destructor Function
+
+#### Golang
+
+-   [ ] Function Pointers
+-   [ ] Interface
+
+
+
+
+
+
+
+
+
+### 0x04 A running example
+
 We use pre-defined (with one-time efforts) code templates of each *operation* $o$ to generate the Promela code for each Path Type $ept$. Specifically, each code template describes the  operation (`read`, `write` or `deliver`) performed on a particular state variable $v$. For example, $o_{will-read}$ indicates to read the *will* message from the client's session. Hence, the code template of $o_{will-read}$ is defined as shown in Listing 1. Notably, there are placeholders in the code templates (e.g., "{clientID}" in Listing 1), which will be populated with the actual values when MQTTactic constructs the *concrete model*.
 
 
@@ -190,7 +217,7 @@ inline DISCONNECT(index){
 }
 ```
 
-### 0x04 Proof of Concept (POC)
+### 0x05 Proof of Concept (POC)
 
 #### POC exploit on Flaw 1
 <div class="my-class">
@@ -348,14 +375,10 @@ topic A and B, respectively) at first, was able to control
 the device B after his permission to control device B was
 revoked.
 
-### Existing Flaws
+#### Existing Flaws
 > Y. Jia, L. Xing, Y. Mao, D. Zhao, X. Wang, S. Zhao, and Y. Zhang,"Burglars' IoT Paradise: Understanding and Mitigating Security Risks of General Messaging Protocols on IoT Clouds,” in Proceedings of the 41st IEEE Symposium on Security and Privacy, 2020, pp. 465–481.
 > 
-Jia et al. identified several flaws in different commercial MQTT brokers through manual analyses, Among all the security flaws identified in [1], four of them are authorization-related flaws (our goal), which were also identified by MQTTactic, i.e., Flaw 8:
-Unauthorized subscription via ClientID hijacking; Flaw
-9: Unauthorized trigger of the Retained message; Flaw
-10: Un-updated subscription; Flaw 11: Unauthorized trigger
-of the Will message.
+Jia et al. identified several flaws in different commercial MQTT brokers through manual analyses, Among all the security flaws identified in [1], four of them are authorization-related flaws (our goal), which were also identified by MQTTactic, i.e., Flaw 8: Unauthorized subscription via ClientID hijacking; Flaw 9: Unauthorized trigger of the Retained message; Flaw 10: Un-updated subscription; Flaw 11: Unauthorized trigger of the Will message.
 
 
 * **Flaw 8**
