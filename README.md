@@ -9,9 +9,106 @@ We provide the detailed technical guidance and examples for LLVM IR generation o
 
 ### 0x02 Getting started
 #### 1. Install
-* The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, the supported LLVM versions are `llvm-9`, `llvm-10`, `llvm-11`, `llvm-12`, and `llvm-13`.
-* Haybale for symbolic execution<br>
-`git clone https://github.com/MQTTactic/Haybale`
+
+*   LLVM
+    The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 for experiments
+
+```
+$ sudo apt install build-essential cmake ninja-build
+```
+
+1.  RELEASE version
+
+```
+$ wget https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+```
+
+2.  DEBUG version
+
+```
+$ wget https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/llvm-project-14.0.0.src.tar.xz
+$ tar xvf llvm-project-14.0.0.src.tar.xz && cd llvm-project-14.0.0.src/
+$ cmake -S llvm -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_PROJECTS="clang;lld;llvm;libcxx;libcxxabi"
+$ cd build && ninja
+```
+
+
+*   SVF
+
+```
+sudo apt-get install zlib1g-dev unzip cmake gcc-10 g++-10 nodejs
+git clone https://github.com/SVF-tools/SVF.git
+cd SVF && git checkout 925fb44a
+export LLVM_DIR=/root/Document/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04
+source ./build.sh
+```
+
+
+
+```
+export MQTT_DIR=/root/Document/mqttactic/MQTTactic
+export SVF_DIR=/root/Document/SVF
+export SVF_BIN=$SVF_DIR/Release-build
+export Z3_DIR=/root/node_modules/z3.obj
+export LLVM_DIR=/root/Document/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04
+
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LLVM_DIR/lib:$SVF_BIN/svf-llvm/
+export PATH=$PATH:$LLVM_DIR/bin:$Z3_DIR/bin:$SVF_BIN/bin
+export CPLUS_INCLUDE_PATH=$LLVM_DIR/include:$SVF_DIR/include:$SVF_BIN/include:$Z3_DIR/include:$MQTT_DIR/Include
+export C_INCLUDE_PATH=$LLVM_DIR/include:$SVF_DIR/include:$Z3_DIR/include:$Z3_DIR/include:$MQTT_DIR/Include
+```
+
+
+
+
+
+  * Haybale for symbolic execution<br>
+
+```
+$ git clone https://github.com/MQTTactic/Haybale
+```
+
+*   Cargo
+
+```
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+$ rustup default nightly-2022-08-02
+```
+
+*    spin
+
+>$ git clone  https://github.com/nimble-code/Spin.git
+>
+>$ apt-get install flex bison
+>
+>$ cd Spin && make -j4
+>
+>$ cd Src
+>
+>$ ln -s ​\$(pwd)/spin /usr/bin/spin
+
+
+
+*   Other dependencies
+
+```
+# Boolector
+# Download and build Boolector
+$ git clone https://github.com/boolector/boolector
+$ cd boolector
+
+# Download and build Lingeling
+$ ./contrib/setup-lingeling.sh
+
+# Download and build BTOR2Tools
+$ ./contrib/setup-btor2tools.sh
+
+# Build Boolector
+$ ./configure.sh --shared && cd build && make && make install
+```
+
+
 
 
 #### 2. Usage
@@ -66,6 +163,14 @@ Here lie numerous challenges in employing static analysis to extract comprehensi
 
 
 
+
+
+
+
+
+### 0x04 Broker running configuration
+
+See `{MQTTactic}/Broker Running Configurations`.
 
 
 
