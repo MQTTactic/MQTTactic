@@ -21,20 +21,20 @@
 
 
 
-// session（will message）
+// 存储在session内的消息（包括will message）
 typedef Message{
-    short topic = -1; // topic=0 
+    short topic = -1; // 暂时只有一个topic=0 即可
     short QoS = -1; // 0,1,2
     short srcClientId = -1; //PUBCLIENTID_0、 SUBCLIENTID_1
     short srcClientIndex = -1;
-    short origin = -1; // 0: broker; 1: publisher; 
+    short origin = -1; // 表示消息从0: broker; 1: publisher; 发出的
     bool retained = false;
 }
 
 
-// 
+// 全局消息
 typedef RetainedMessage{
-    short topic = -1; // topic=0 
+    short topic = -1; // 暂时只有一个topic=0 即可
     short QoS = -1; // 0,1,2
     short srcClientId = -1; 
     short srcClientIndex = -1;
@@ -47,14 +47,14 @@ typedef Subscription{
 }
 
 
-// clientId
+// 唯一clientId
 typedef Session{
     short clientId = -1;
     short clientIndex = -1;
     bool cleanStart;
     bool connected = false;
 
-    // session，publisherqos2，subscriberbrokerqos1、2
+    // 存储再session中的未确认消息队列，对于publisher是发布的qos2消息，对于subscriber是收到broker的qos1、2消息
     Message messages[MAXMESSAGES];
     short messagesLen = 0;
     Subscription subscriptions[MAXSUBSCRIPTIONS];
@@ -64,7 +64,7 @@ typedef Session{
     
 }
 
-// username
+// 唯一username
 typedef Client{
     short username;
     short password;
@@ -72,8 +72,8 @@ typedef Client{
     bool connected = false;
     /*
         TODO:
-        acl = {PUBLISH=2, SUBSCRIBER=1} 1 + 2 = 3
-        ，ACL，。
+        acl = {PUBLISH=2, SUBSCRIBER=1} 默认为拥有全部权限1 + 2 = 3
+        针对不同的实现，ACL定义会有不同，需要定制化。
         e.g. mosquitto_acl(PUBLISH/SUBSCRIBE/READ)
     */
     short acl = PUBLISHACL + SUBSCRIBEACL;
@@ -88,9 +88,9 @@ typedef Client{
 bool BadDisconnect;
 Client Clients[MAXCLIENTS];
 Session Sessions[MAXSESSIONS];
-// Sessionssession
+// Sessions数组用于保存已连接客户端的session
 /*
-    TODO: topic=0，topicretained messages
+    TODO: 目前就一个topic=0，后续增加topic可能需要增加retained messages
 */
 RetainedMessage RetainedMessages;
 
@@ -101,7 +101,7 @@ inline CONNECT_entry_point(index){
     atomic{
         /*
             TODO:
-            
+            这里暂时假设直接认证成功
         */
         // Authentication_UserPass_allowed();
         CONNECT_auth_success(index);
@@ -148,10 +148,10 @@ inline CONNECT_will_message(index){
     atomic{
         localClientId = Clients[index].clientId;
         if
-            // publisherwill message，subscriber，will
+            // 如果是publisher就创建一个will message，subscriber假设只订阅不发布，所以不创建will
             :: (localClientId != SUBCLIENTID_1) ->
                 Sessions[localClientId].willmessage.topic = 0;
-                // qoswill message
+                // 因为不同qos的will message没有意义
                 Sessions[localClientId].willmessage.QoS = 0;
                 Sessions[localClientId].willmessage.srcClientId = localClientId;
                 Sessions[localClientId].willmessage.srcClientIndex = index;
@@ -238,7 +238,7 @@ inline PUBLISH_end(){
 
 /******************** PUBREL *************************/
 /*
-    TODO: topic，PUBREL，Publishersession
+    TODO: 依然简化为只有一个topic，PUBREL简化为进先出，确认Publisher的session中未确认消息队列
 */
 inline PUBREL_entry_point(index){
     atomic{
@@ -396,12 +396,12 @@ inline Deliver_to_Subscribers(message){
                 bool hasSubscription = false;
                 j = 0;
                 if
-                    // session，cleanStart=true, disconnect，
+                    // session是空的，或者由于cleanStart=true, disconnect，没有清空
                     :: (Sessions[i_1].clientId == -1) ->
                         goto nextClients;
                     :: else -> skip;
                 fi;
-                // Clients[i_1] ，messagetopic
+                // 遍历Clients[i_1] 的订阅树，查看是否订阅message的topic
                 do
                     :: j < MAXSUBSCRIPTIONS ->
                         if
@@ -416,10 +416,10 @@ inline Deliver_to_Subscribers(message){
                 od;
 
                 if
-                    // 
+                    // 如果订阅者在线则直接投递
                     :: (hasSubscription == true && Sessions[i_1].connected == true) ->
                         Deliver(message, i_1);
-                    // QoS1，2session
+                    // 如果订阅者不在线则将QoS1，2的消息存放在订阅者session中
                     :: (hasSubscription == true && Sessions[i_1].connected == false && (message.QoS == 1 || message.QoS == 2)) ->
                         if
                             :: Sessions[i_1].messagesLen < MAXMESSAGES ->
@@ -427,7 +427,7 @@ inline Deliver_to_Subscribers(message){
                                 Sessions[i_1].messages[Sessions[i_1].messagesLen].QoS = message.QoS;
                                 Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientId = message.srcClientId;
                                 Sessions[i_1].messages[Sessions[i_1].messagesLen].srcClientIndex = message.srcClientIndex;
-                                Sessions[i_1].messages[Sessions[i_1].messagesLen].origin = 0; // brokersubscriber
+                                Sessions[i_1].messages[Sessions[i_1].messagesLen].origin = 0; // 表示从broker向subscriber发送的消息
                                 Sessions[i_1].messagesLen = Sessions[i_1].messagesLen + 1;
                             :: else ->
                                 printf("SESSION_%d: can not store more qos1,2 messages\n", i_1);
@@ -550,7 +550,7 @@ printf("Enter function handle__publish_qos2_Type_0\n");
         fi;
 
         /*
-            TODO: basemodel，qos2，pubrel
+            TODO: 这里需要区分两种basemodel，一种是收到qos2消息直接投递，一种等待pubrel再投递
         */
         PUBLISH_end();
 
@@ -583,7 +583,7 @@ printf("Enter function handle__publish_qos2_Type_1\n");
         fi;
 
         /*
-            TODO: basemodel，qos2，pubrel
+            TODO: 这里需要区分两种basemodel，一种是收到qos2消息直接投递，一种等待pubrel再投递
         */
 LABEL_4_Type_1:
  skip; 
@@ -653,7 +653,7 @@ printf("Enter function handle__connect_cleanStartT_Type_0_2_3_4_5_7_Type_1_Type_
 
 
 
-        // oldsession，session
+        // 清空oldsession的未确认消息，创建新session
         i = 0;
         do
             :: i < MAXMESSAGES ->
@@ -667,7 +667,7 @@ printf("Enter function handle__connect_cleanStartT_Type_0_2_3_4_5_7_Type_1_Type_
         od;  
         Sessions[localClientId].messagesLen = 0;
         i = 0;
-        // 
+        // 清空订阅关系
         do
             :: i < MAXSUBSCRIPTIONS ->
                 Sessions[localClientId].subscriptions[i].topic = -1;
@@ -675,7 +675,7 @@ printf("Enter function handle__connect_cleanStartT_Type_0_2_3_4_5_7_Type_1_Type_
             :: else -> break;
         od;  
         Sessions[localClientId].subscriptionsLen = 0;
-        // will message
+        // 清除will message
         Sessions[localClientId].willmessage.topic = -1;
         Sessions[localClientId].willmessage.QoS = -1;
         Sessions[localClientId].willmessage.srcClientId = -1;
@@ -697,7 +697,7 @@ printf("Enter function handle__connect_cleanStartF_Type_1_Type_8_11\n");
         do
             :: i < MAXMESSAGES ->
                 if
-                    // Broker，Broker
+                    // 如果是Broker向订阅者发送的消息未确认，则Broker重发这些消息
                     :: (Sessions[localClientId].messages[i].topic != -1 && Sessions[localClientId].messages[i].origin == 0) ->
                         if
                             :: (Sessions[localClientId].messages[i].QoS == 0) ->
@@ -796,7 +796,7 @@ printf("Enter function handle__pubrel_Type_0_2_Type_1\n");
                         message.srcClientId = localClientId;
                         message.srcClientIndex = index;
                         /*
-                            TODO: basemodel，qos2，pubrel
+                            TODO: 这里需要区分两种basemodel，一种是收到qos2消息直接投递，一种等待pubrel再投递
                         */
                         Deliver_to_Subscribers(message)
                     :: else -> skip;  
@@ -950,9 +950,9 @@ proctype ProcessPublisher2(short index){
     short localClientId;
     bool authorization_result = false;
     short publishedMessages = 0;
-    // 、、
+    // 只允许登录一次、下线一次、再次登录
     short canConnect = 2;
-    // 
+    // 不允许两次登录之间没有任何其他操作
     bool badReconnect = false;
     do
         :: (Clients[index].connected == false && Sessions[Clients[index].clientId].connected == true) ->
@@ -979,9 +979,9 @@ proctype ProcessPublisher(short index){
     short localClientId;
     bool authorization_result = false;
     short publishedMessages = 0;
-    // 、、
+    // 只允许登录一次、下线一次、再次登录
     short canConnect = 2;
-    // 
+    // 不允许两次登录之间没有任何其他操作
     bool badReconnect = false;
     do
         ::
@@ -1029,7 +1029,7 @@ proctype ProcessPublisher(short index){
                 fi;
             }
         /*
-            TODO: ACL
+            TODO: ACL需定制化
         */
         ::
             atomic{ 
@@ -1049,9 +1049,9 @@ proctype ProcessSubscriber(short index){
     short j = 0;
     short localClientId;
     bool authorization_result = false;
-    // 、、
+    // 只允许登录一次、下线一次、再次登录
     short canConnect = 2;
-    // 
+    // 不允许两次登录之间没有任何其他操作
     bool badReconnect = false;
     do
         :: (Clients[index].connected == false && canConnect >= 0 && badReconnect == false && BadDisconnect == false) ->
@@ -1081,7 +1081,7 @@ proctype ProcessSubscriber(short index){
                         BadDisconnect = true;
                     }
                 /*
-                    TODO: ACL
+                    TODO: ACL需定制化
                 */
                 :: (Clients[index].aclTruth != 0 && (Clients[index].aclTruth & SUBSCRIBEACL) == SUBSCRIBEACL) -> 
                     atomic{ 

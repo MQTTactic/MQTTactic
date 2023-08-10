@@ -5,7 +5,7 @@ import json
 
 from nbformat import read
 from sqlalchemy import false
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #存放c.py所在的绝对路径
 
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config

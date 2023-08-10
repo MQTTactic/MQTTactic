@@ -1,7 +1,240 @@
-#include "../../Include/PTA.h"
+#include "PTA.h"
 
 namespace mqttactic
 {
+void PTA::FindSessionSet(llvm::Value* taint_value, std::set<Value*>& sess_set, std::map<Value*, std::map<Value*, bool>>& sess_graph)
+{
+    SVFIR*                       pag = this->Ander->getPAG();
+    FIFOWorkList<const VFGNode*> worklist;
+    std::set<const VFGNode*>     complete_worklist;
+
+    PAGNode* pNode = pag->getGNode(pag->getValueNode(taint_value));
+    if (pNode->hasValue() && pNode->getValue() == taint_value)
+    {
+        const VFGNode* vNode = this->Svfg->getDefSVFGNode(pNode);
+        if (vNode->getValue() != nullptr)
+        {
+            worklist.push(vNode);
+            while (!worklist.empty())
+            {
+                const VFGNode* vNode = worklist.pop();
+                Value*         _v = const_cast<Value*>(vNode->getValue());
+
+                sess_set.insert(_v);
+                complete_worklist.insert(vNode);
+
+                for (VFGNode::const_iterator it = vNode->OutEdgeBegin(), eit = vNode->OutEdgeEnd(); it != eit; ++it)
+                {
+                    VFGEdge*    edge = *it;
+                    VFGNode*    succNode = edge->getDstNode();
+                    std::string calledFuncName = "";
+
+                    if (const CallICFGNode* call_inst = dyn_cast<CallICFGNode>(vNode->getICFGNode()))
+                    {
+                        const llvm::Instruction* I = call_inst->getCallSite();
+                        std::string              calledFuncName = MQTTLLVMUtils::GetCalledFuncName(const_cast<Instruction*>(I));
+
+                        if (ALLFunctions.find(calledFuncName) == ALLFunctions.end())
+                            continue;
+                    }
+                    // MA node
+                    if (succNode->getValue() == nullptr)
+                    {
+                        // ignore other memory region node: FPIN/FPOUT/APIN/APOUT/MPhi/MInterPhi
+                        if (!(succNode->getNodeKind() == VFGNode::MIntraPhi) || (succNode->getNodeKind() == VFGNode::MIntraPhi && vNode->getNodeKind() == VFGNode::MIntraPhi))
+                            continue;
+                    }
+
+                    if (complete_worklist.find(succNode) == complete_worklist.end())
+                        worklist.push(succNode);
+                    if (succNode->getValue() != nullptr && _v != nullptr)
+                    {
+                        Value* succ_value = const_cast<Value*>(succNode->getValue());
+                        if (sess_graph.find(_v) == sess_graph.end())
+                        {
+                            std::map<llvm::Value*, bool> _y;
+                            sess_graph.insert(std::map<llvm::Value*, std::map<llvm::Value*, bool>>::value_type(_v, _y));
+                        }
+                        if (sess_graph.find(succ_value) == sess_graph.end())
+                        {
+                            std::map<llvm::Value*, bool> _y;
+                            sess_graph.insert(std::map<llvm::Value*, std::map<llvm::Value*, bool>>::value_type(succ_value, _y));
+                        }
+                        sess_graph[_v][succ_value] = true;
+                        sess_graph[succ_value][_v] = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void PTA::FindSessionContext(llvm::Value* taint_value, Type* taint_type, std::map<llvm::Value*, std::vector<Function*>>& contexts)
+{
+    SVFIR*                                             pag = this->Ander->getPAG();
+    std::vector<const VFGNode*>                        worklist;
+    std::set<const VFGNode*>                           complete_worklist;
+    std::map<const VFGNode*, std::set<const VFGNode*>> vNode_succs;
+    PAGNode*                                           pNode = pag->getGNode(pag->getValueNode(taint_value));
+    std::vector<const VFGNode*>                        path;
+
+
+    if (pNode->hasValue() && pNode->getValue() == taint_value)
+    {
+        // 1. 通过taint_value(一般为socket, 存储于session内) 找到 session类型的vNode
+        const VFGNode* taint_Node = this->Svfg->getDefSVFGNode(pNode);
+        worklist.push_back(taint_Node);
+
+        while (!worklist.empty())
+        {
+            const VFGNode* vNode = worklist.back();
+            worklist.pop_back();
+            const Value* _v = vNode->getValue();
+            if (_v != nullptr)
+            {
+                bool        is_sess_var = false;
+                llvm::Type* ty = _v->getType();
+                if (ty == taint_type)
+                    is_sess_var = true;
+                else
+                {
+                    while (PointerType* base_type = dyn_cast<PointerType>(ty))
+                    {
+                        if (!(base_type->isOpaque()))
+                            ty = base_type->getElementType();
+
+                        if (taint_type == ty)
+                            is_sess_var = true;
+                    }
+                }
+                if (is_sess_var)
+                {
+                    taint_Node = vNode;
+                    break;
+                }
+            }
+            for (VFGNode::const_iterator it = vNode->InEdgeBegin(), eit = vNode->InEdgeEnd(); it != eit; ++it)
+            {
+                VFGEdge* edge = *it;
+                VFGNode* succNode = edge->getSrcNode();
+
+                if (succNode->getValue() == nullptr)
+                {
+                    // ignore other memory region node: FPIN/FPOUT/APIN/APOUT/MPhi/MInterPhi
+                    if (!(succNode->getNodeKind() == VFGNode::MIntraPhi) || (succNode->getNodeKind() == VFGNode::MIntraPhi && vNode->getNodeKind() == VFGNode::MIntraPhi))
+                        continue;
+                }
+
+                vNode_succs[vNode].insert(succNode);
+                worklist.push_back(succNode);
+            }
+        }
+
+        // 2. 寻找指定session value的callsite context
+        worklist.clear();
+        worklist.push_back(taint_Node);
+        while (!worklist.empty())
+        {
+            const VFGNode* vNode = worklist.back();
+            Function*      func = nullptr;
+            worklist.pop_back();
+
+            if (path.size() > 0)
+            {
+                const VFGNode* _last = path.back();
+                if (vNode_succs.find(_last) != vNode_succs.end())
+                {
+                    while (vNode_succs[_last].find(vNode) == vNode_succs[_last].end())
+                    {
+                        path.pop_back();
+                        _last = path.back();
+                    }
+                }
+            }
+            path.push_back(vNode);
+            complete_worklist.insert(vNode);
+
+            int succ_count = 0;
+
+            if (vNode->getICFGNode()->getBB() != nullptr)
+                func = const_cast<llvm::Function*>(vNode->getICFGNode()->getBB()->getParent());
+            else if (vNode->getFun() != nullptr)
+                func = vNode->getFun()->getLLVMFun();
+
+            if (func != nullptr)
+            {
+                string _s = func->getName().str();
+                if (_s == mqttactic::handle__connect || _s == mqttactic::handle__publish || _s == mqttactic::handle__pubrel || _s == mqttactic::handle__subscribe || _s == mqttactic::handle__unsubscribe || _s == mqttactic::handle__disconnect)
+                {
+                    goto FINDTHEBEGIN;
+                }
+            }
+
+            for (VFGNode::const_iterator it = vNode->InEdgeBegin(), eit = vNode->InEdgeEnd(); it != eit; ++it)
+            {
+                VFGEdge* edge = *it;
+                VFGNode* succNode = edge->getSrcNode();
+
+                if (succNode->getValue() == nullptr)
+                {
+                    // ignore other memory region node: FPIN/FPOUT/APIN/APOUT/MPhi/MInterPhi
+                    if (!(succNode->getNodeKind() == VFGNode::MIntraPhi) || (succNode->getNodeKind() == VFGNode::MIntraPhi && vNode->getNodeKind() == VFGNode::MIntraPhi))
+                        continue;
+                }
+                else if (succNode->getNodeKind() == VFGNode::Addr)
+                {
+                    continue;
+                }
+
+                //[TODO]: 还是需要记录已经访问过的context
+                if (complete_worklist.find(succNode) == complete_worklist.end() && std::find(worklist.begin(), worklist.end(), succNode) == worklist.end())
+                {
+                    vNode_succs[vNode].insert(succNode);
+                    succ_count++;
+                    worklist.push_back(succNode);
+                    // SVFUtil::errs() << "PUSH:" << *succNode << "\n";
+                }
+            }
+
+            // SVFUtil::errs() << *vNode << ":\n";
+            // for (auto test : path)
+            // {
+            //     SVFUtil::errs() << "->" << test->getId();
+            // }
+            // dbgs() << "\n\n";
+
+        FINDTHEBEGIN:
+            if (succ_count == 0)
+            {
+                if (vNode->getValue() != nullptr)
+                {
+                    std::vector<Function*> call_stack;
+                    Function*              func = nullptr;
+                    for (auto bbit = path.rbegin(); bbit != path.rend(); ++bbit)
+                    {
+                        if ((*bbit)->getICFGNode()->getBB() != nullptr)
+                            func = const_cast<llvm::Function*>((*bbit)->getICFGNode()->getBB()->getParent());
+                        else if ((*bbit)->getFun() != nullptr)
+                            func = (*bbit)->getFun()->getLLVMFun();
+
+                        // Some vfg node have no function, e.g.,  @db = dso_local global %struct.mosquitto_db zeroinitializer, align 8, !dbg !761 { Glob ln: 59 fl: mosquitto.c }
+                        if (func == nullptr)
+                        {
+                            // SVFUtil::errs() << "[ERROR]: " << *(*bbit) << "\n";
+                            continue;
+                        }
+                        if (call_stack.size() == 0 || (call_stack.size() > 0 && func != call_stack.back()))
+                            call_stack.push_back(func);
+                    }
+                    contexts[const_cast<llvm::Value*>(vNode->getValue())] = call_stack;
+                }
+                path.pop_back();
+            }
+        }
+    }
+}
+
+
 void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::map<const llvm::BasicBlock*, mqttactic::SemanticKBB*>& SKBBS)
 {
     SVFIR*                       pag = this->Ander->getPAG();
@@ -22,7 +255,7 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
     }
 
     PAGNode* pNode = pag->getGNode(pag->getValueNode(taint_value));
-    if (pNode->hasValue() && pNode->getValue() == taint_value && this->Svfg->hasDefSVFGNode(pNode))
+    if (pNode->hasValue() && pNode->getValue() == taint_value)
     {
         const VFGNode* vNode = this->Svfg->getDefSVFGNode(pNode);
         // dbgs() << "DefSvfgNode id: " << vNode->getId() << "\n";
@@ -38,29 +271,6 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
             while (!worklist.empty())
             {
                 const VFGNode* vNode = worklist.pop();
-
-                // dbgs() << "Value: " << *(vNode->getValue()) << "\n";
-                // for (auto node_id : vNode->getDefSVFVars())
-                // {
-                //     PAGNode *pag_node = pag->getGNode(node_id);
-                //     for (auto edge : pag_node->getOutEdges())
-                //     {
-                //         if (edge->getEdgeKind() == SVFStmt::Addr)
-                //             pag_node = edge->getDstNode();
-                //     }
-                //     // dbgs() << pag_node->getId() << "\n";
-                //     if (this->Svfg->hasDefSVFGNode(pag_node))
-                //     {
-                //         const VFGNode *succNode = this->Svfg->getDefSVFGNode(pag_node);
-                //         // dbgs() << *(succNode->getValue()) << "\n";
-                //         if (succNode->getValue() && svfg_nodes_with_context.find(succNode) == svfg_nodes_with_context.end())
-                //         {
-                //             svfg_nodes_with_context.insert(succNode);
-                //             worklist.push(succNode);
-                //             pts_set.insert(succNode->getValue());
-                //         }
-                //     }
-                // }
                 for (VFGNode::const_iterator it = vNode->OutEdgeBegin(), eit = vNode->OutEdgeEnd(); it != eit; ++it)
                 {
                     VFGEdge* edge = *it;
@@ -69,25 +279,11 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                     // Don't propagate to the key_operation function defined in "IdentifyCallFuncOperation"
                     if (const CallICFGNode* call_inst = dyn_cast<CallICFGNode>(vNode->getICFGNode()))
                     {
-                        const Instruction* I = call_inst->getCallSite();
-                        int                op_type = IdentifyOperationType(I, vNode->getValue(), pts_set);
+                        const llvm::Instruction* I = call_inst->getCallSite();
+                        int                      op_type = IdentifyOperationType(I, vNode->getValue(), pts_set);
                         if (op_type != -1)
                             break;
                     }
-
-                    // if (edge->isCallVFGEdge())
-                    // {
-                    //     vfCond = ComputeInterCallVFGGuard(nodeBB, succBB, getCallSite(edge)->getParent());
-                    // }
-                    // else if (edge->isRetVFGEdge())
-                    // {
-                    //     vfCond = ComputeInterRetVFGGuard(nodeBB, succBB, getRetSite(edge)->getParent());
-                    // }
-                    // else
-                    //     vfCond = ComputeIntraVFGGuard(nodeBB, succBB);
-
-                    // SVFUtil::errs() << "src: " << *vNode << "\n"
-                    //     << "dst: " << *succNode << "\n";
 
                     // MA node
                     if (succNode->getValue() == nullptr)
@@ -104,10 +300,8 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         {
                             continue;
                         }
-                        // else {
-                        //     dbgs() << "Matched value: " << *(succNode->getValue()) << "\n";
-                        // }
                     }
+
 
                     // Add the succNode to the svfg_nodes_with_context
                     if (svfg_nodes_with_context.find(succNode) == svfg_nodes_with_context.end())
@@ -189,10 +383,10 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
             {
                 if (vit->first->getValue() && (StmtVFGNode::classof(vit->first) || ArgumentVFGNode::classof(vit->first)))
                 {
-                    const Instruction* I;
-                    int                op_type = 0;
-                    std::string        Str;
-                    raw_string_ostream OS(Str);
+                    const llvm::Instruction* I;
+                    int                      op_type = 0;
+                    std::string              Str;
+                    raw_string_ostream       OS(Str);
                     vit->first->getValue()->printAsOperand(OS, false);
 
                     if (const IntraICFGNode* inst = dyn_cast<IntraICFGNode>((vit->first)->getICFGNode()))
@@ -215,6 +409,11 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         op_type = KeyOperation::READ;
 
                     const llvm::BasicBlock* bb = (vit->first)->getICFGNode()->getBB();
+
+
+                    // [TODO]: 暂时只关注deliver里的msg变量
+                    if (taint_var->varType == "Msg" && op_type != KeyOperation::DELIVER)
+                        continue;
 
                     if (SKBBS.find(bb) == SKBBS.end())
                     {
@@ -364,7 +563,7 @@ bool PTA::PTAConstraint(KeyVariable* taint_var, llvm::Value* taint_value, VFGNod
     return ret;
 }
 
-int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const Value*>& pts_set)
+int PTA::IdentifyOperationType(const llvm::Instruction* I, const Value* V, Set<const Value*>& pts_set)
 {
     unsigned int opcode = I->getOpcode();
     switch (opcode)
@@ -374,7 +573,7 @@ int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const V
         std::string     calledFuncName = "";
         if (call->isIndirectCall() || !(call->getCalledFunction()))
         {
-            const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+            const llvm::GlobalAlias* GV = dyn_cast<llvm::GlobalAlias>(call->getCalledOperand());
             if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
                 calledFuncName = GV->getAliasee()->getName().str();
             else
@@ -385,10 +584,31 @@ int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const V
             calledFuncName = call->getCalledFunction()->getName().str();
         }
 
+        // e.g., obj->push_back()
         if (call->getArgOperand(0) == V && calledFuncName != "")
         {
             int op_type = IdentifyCallFuncOperation(calledFuncName);
             return op_type;
+        }
+        // For DELIVER： e.g., send(msg)
+        else
+        {
+            for (int s = 0; s < call->arg_size(); s++)
+            {
+                if (call->getArgOperand(s) == V && calledFuncName != "")
+                {
+                    int op_type = -1;
+                    for (auto op : mqttactic::OperationDeliver)
+                    {
+                        if (calledFuncName == op)
+                        {
+                            op_type = mqttactic::DELIVER;
+                            break;
+                        }
+                    }
+                    return op_type;
+                }
+            }
         }
 
         break;
@@ -398,7 +618,7 @@ int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const V
         std::string       calledFuncName = "";
         if (call->isIndirectCall() || !(call->getCalledFunction()))
         {
-            const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+            const llvm::GlobalAlias* GV = dyn_cast<llvm::GlobalAlias>(call->getCalledOperand());
             if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
                 calledFuncName = GV->getAliasee()->getName().str();
             else
@@ -412,6 +632,25 @@ int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const V
         {
             int op_type = IdentifyCallFuncOperation(calledFuncName);
             return op_type;
+        }
+        else
+        {
+            for (int s = 0; s < call->arg_size(); s++)
+            {
+                if (call->getArgOperand(s) == V && calledFuncName != "")
+                {
+                    int op_type = -1;
+                    for (auto op : mqttactic::OperationDeliver)
+                    {
+                        if (calledFuncName == op)
+                        {
+                            op_type = mqttactic::DELIVER;
+                            break;
+                        }
+                    }
+                    return op_type;
+                }
+            }
         }
         break;
     }
@@ -446,14 +685,11 @@ int PTA::IdentifyOperationType(const Instruction* I, const Value* V, Set<const V
 // Identify operation type of STL function. e.g., vector::push_back
 int PTA::IdentifyCallFuncOperation(std::string func_name)
 {
-    std::string OperationFuncRead[] = {"back", "front", "find", "top", "contain"};
-    std::string OperationFuncWrite0[] = {"pop_back", "erase", "pop", "delete", "Remove", "clear", "free", "_ZdlPv"};
-    std::string OperationFuncWrite1[] = {"push_back", "insert", "push", "PushBack", "PushFront"};
 
     std::string pos = "";
     int         op_type = -1;
 
-    for (auto op : OperationFuncRead)
+    for (auto op : mqttactic::OperationFuncRead)
     {
         if (func_name.find(op) != std::string::npos)
         {
@@ -462,7 +698,7 @@ int PTA::IdentifyCallFuncOperation(std::string func_name)
             break;
         }
     }
-    for (auto op : OperationFuncWrite0)
+    for (auto op : mqttactic::OperationFuncWrite0)
     {
         if (func_name.find(op) != std::string::npos)
         {
@@ -472,7 +708,7 @@ int PTA::IdentifyCallFuncOperation(std::string func_name)
             break;
         }
     }
-    for (auto op : OperationFuncWrite1)
+    for (auto op : mqttactic::OperationFuncWrite1)
     {
         if (func_name.find(op) != std::string::npos)
         {
@@ -490,4 +726,6 @@ int PTA::IdentifyCallFuncOperation(std::string func_name)
 
     return op_type;
 }
+
+
 }  // namespace mqttactic

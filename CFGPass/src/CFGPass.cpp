@@ -3,11 +3,11 @@ clang  -Wl,-znodelete -fno-rtti -fPIC -shared CFGPass.cpp -o CFGPass.so
 opt -load ./CFGPass.so -CFG ./mosquitto.bc -o /dev/null 2>
 handle__publish.output
 
-：
-1.  "./ALLFunctions"
+需要提前获取：
+1. 所有自定义函数名 "./ALLFunctions"
 */
 
-#include "../../Include/VarAnalysis.h"
+#include "VarAnalysis.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/CFG.h"
@@ -28,24 +28,27 @@ handle__publish.output
 
 using namespace llvm;
 
+// Here we register the pass arguments
+cl::opt<string> Handler("Handler", cl::desc("Specify handler"), cl::Required);
+
 
 class CFGPass : public ModulePass
 {
 public:
     typedef std::vector<BasicBlock*> PathType;
-    // handlerendBB""keyBB(BB)
+    // 用于寻找从handler到endBB"可能"经过的keyBB路径(一般是函数调用所处的BB)
     struct keyBBPath
     {
         BasicBlock* bb;
         std::string func;
-        // BB
+        // 表示这条路径上这个BB是必须经过的
         bool mustBePassed;
     };
-    // ，BBreturnkeyBB，Call
+    // 用于分析单个函数，从首个BB到return的所有可能经过的keyBB路径，不会进入Call
     struct keyBBPathWithoutCall
     {
         BasicBlock* bb;
-        // BB
+        // 这个BB调用的函数
         std::set<std::string> calledFuncs;
     };
 
@@ -55,7 +58,7 @@ public:
         bool            isVirtualHead = false;
         bool            isVirtualTail = false;
         llvm::Function* callSite = nullptr;
-        // BB
+        // 这个BB调用的函数
         std::map<llvm::Instruction*, llvm::Function*> calledFuncs;
         // {Inst: "semantic"}, e.g., {I: "func===LIST:sub_read"}, {I: "func===CALLSITE"}
         std::map<llvm::Instruction*, std::string> semanticInsts;
@@ -71,24 +74,24 @@ public:
     {
         std::string              ptSemantic = "";
         std::vector<std::string> ptSemanticVec;
+        std::vector<std::string> ptFunc;
         PathType                 pt;
     };
 
     static char ID;
     // variable analyzer
     mqttactic::VarAnalysis* var_analyzer;
-    // first: ; second: 0/1/2()/3ACL_CHECK
-    std::map<std::string, short>       ALLFunctions;
-    std::map<std::string, BasicBlock*> ALLBasicBlocks;
+    // first: 函数名; second: 0表示还未遍历到/1表示遍历过但是不存在关键操作/2表示遍历过并找到了关键操作(但是可能需要几层函数调用)/3表示函数是ACL_CHECK
+    std::map<std::string, short> ALLFunctions;
 
     std::set<const llvm::BasicBlock*> KeyBasicBlocks;
     // AnchorBB: 1. KBB or callsites that will flow to KBB; 2. ACL_CHECK
     std::set<BasicBlock*>               AnchorBBs;
     std::map<BasicBlock*, SemanticABB*> SemanticAnchorBBs;
 
-    // send__**ackBB
+    // 包含send__**ack的BB
     std::set<BasicBlock*> endBBs;
-    // 
+    // 包含关键操作的函数
     std::set<std::string> keyFuncs;
     // Anchor Basic Block CFG Graphs for each keyFuncs,
     std::map<llvm::Function*, std::map<SemanticABB*, std::map<SemanticABB*, bool>>> FuncSliceGraph;
@@ -101,12 +104,12 @@ public:
     std::map<BasicBlock*, std::map<std::string, PathType>> completeBBs_kpath;
 
     std::map<Function*, std::map<std::string, SemanticPathType*>> completeFunc_kpath;
-    // BB
+    // 已完成遍历的BB之间的边
     std::map<BasicBlock*, std::set<BasicBlock*>> completeEdges;
-    // 0: handlerend, 1:return 2: keyFuncs
+    // 0: 代表标准的handler函数的end, 1:return为终点 2: keyFuncs的调用为终点
     int switchEnd = 0;
 
-    std::string handlerName = mqttactic::handle__pubrel;
+    std::string handlerName;
 
     std::string outputDir = "../OUTPUT";
 
@@ -117,7 +120,7 @@ public:
     ********************************/
 
     void identifyKeyBasicBlock(Module& M, Function& F);
-    // ，KBB
+    // 递归遍历函数的所有指令，定位KBB以及调用链
     int traverseCallGraph(Module& M, Function& F);
     // Traverse the handler function
     int traverseCFG(Module& M, Function& F, BasicBlock* origin, std::vector<BasicBlock*> paths);
@@ -130,24 +133,23 @@ public:
 
     // use the context of KBB to filter the Anchor BBs
     bool isFakeAnchorBB(BasicBlock* bb, std::vector<BasicBlock*> contextPath);
-    // ALLFunctionssecond
+    // 清空所有ALLFunctions中的second
     bool clearALLFunctions();
 
-    // BBlabel
+    // 获取BB的label
     std::string getBBLabel(const BasicBlock* Node);
     int         getBBLabelIdx(const Function* func, const BasicBlock* Node);
-    // KBB
-    void readKBBFile(std::string file);
 
-    // ，endBB，keyBBs
+
+    // 递归遍历函数所有指令，直到找到endBB，返回可能经过的所有keyBBs
     bool traverseFuncToEnd(Module& M, Function& F, BasicBlock* end, bool foundEnd, std::vector<keyBBPath> path, std::vector<std::vector<keyBBPath>>& endPath, std::vector<std::vector<keyBBPath>>& results);
-    // ，return，keyBBs()
+    // 递归遍历一个函数，从头到return，经过的所有keyBBs(递归进入调用函数)
     void traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath> path, std::vector<keyBBPath>& result);
     void traverseFuncToReturnWithoutCall(Module& M, Function& F, std::vector<keyBBPathWithoutCall>& result);
 
-    // origindest，
+    // 从origin到dest的所有路径，用于计算路径总数
     long traversePath(Module& M, Function& F, BasicBlock* origin, BasicBlock* dest, std::vector<BasicBlock*> paths);
-    // 
+    // 用于实际地提取出路径
     long traversePath(Module& M, Function& F, BasicBlock* origin, BasicBlock* dest, std::vector<BasicBlock*> paths, std::vector<std::vector<BasicBlock*>>& results);
 
     bool isRetBBs(BasicBlock* bb);
@@ -158,7 +160,7 @@ public:
 
     CFGPass() : ModulePass(ID)
     {
-        // 
+        // 获取所有函数
         std::string   fname;
         std::ifstream infile("../ALLFunctions");
         if (infile.is_open())
@@ -169,6 +171,7 @@ public:
                 ALLFunctions.insert(std::map<std::string, short>::value_type(fname, 0));
             }
         }
+        handlerName = Handler.c_str();
     }
     void getAnalysisUsage(AnalysisUsage& AU) const override
     {
@@ -179,25 +182,18 @@ public:
     {
         Function&                F = *M.getFunction(handlerName);
         std::vector<BasicBlock*> paths;
-        // BB
+        // 按函数存放函数内的关键BB们
         std::map<std::string, std::vector<BasicBlock*>> keyVecs;
-        // ，Nodes: entryBlock、return(nullptr)、path_Count
+        // 邻接矩阵，Nodes: entryBlock、return(nullptr)、path_Count
         std::map<BasicBlock*, std::map<BasicBlock*, long>> pathMap;
 
-        for (Module::iterator mi = M.begin(); mi != M.end(); ++mi)
-        {
-            Function& f = *mi;
-            for (auto& bb : f)
-            {
-                std::string bb_str = bb.getParent()->getName().str() + ":" + getBBLabel(&bb);
-                ALLBasicBlocks.insert(std::pair<std::string, llvm::BasicBlock*>(bb_str, &bb));
-            }
-        }
 
         keyFuncs.insert(F.getName().str());
         errs() << "[INFO]: Analyzing Function: " << F.getName().str() << "\n";
 
         identifyKeyBasicBlock(M, F);
+
+
         int cou = 0;
         for (auto key_var : var_analyzer->key_variables)
         {
@@ -210,14 +206,14 @@ public:
 
         errs() << "[INFO]: Anchor Basic Blocks: " << AnchorBBs.size() << "\n\n\n\n";
 
-        dbgs() << "\n\n/**********************/\n[DBG]: Semantic AnchorBB: \n/**********************/\n";
-        for (auto sabbit = SemanticAnchorBBs.begin(); sabbit != SemanticAnchorBBs.end(); sabbit++)
-        {
-            dbgs() << "=====================================================\n";
-            dbgs() << *(sabbit->first) << "\n\n";
-            for (auto siit = sabbit->second->semanticInsts.begin(); siit != sabbit->second->semanticInsts.end(); siit++)
-                dbgs() << *(siit->first) << ":" << siit->second << "\n";
-        }
+        // dbgs() << "\n\n/**********************/\n[DBG]: Semantic AnchorBB: \n/**********************/\n";
+        // for (auto sabbit = SemanticAnchorBBs.begin(); sabbit != SemanticAnchorBBs.end(); sabbit++)
+        // {
+        //     dbgs() << "=====================================================\n";
+        //     dbgs() << *(sabbit->first) << "\n\n";
+        //     for (auto siit = sabbit->second->semanticInsts.begin(); siit != sabbit->second->semanticInsts.end(); siit++)
+        //         dbgs() << *(siit->first) << ":" << siit->second << "\n";
+        // }
 
         // Path Types for each keyFuncs
         std::map<llvm::Function*, std::vector<PathType>> FuncPathTypes;
@@ -240,21 +236,6 @@ public:
             }
             FuncPathTypes.insert(std::map<llvm::Function*, std::vector<PathType>>::value_type(&fn, path_types));
         }
-
-
-        // for (auto fptit = FuncPathTypes.begin(); fptit != FuncPathTypes.end(); fptit++)
-        // {
-        //     dbgs() << fptit->first->getName().str() << ": \n";
-        //     for (auto ptit = fptit->second.begin(); ptit != fptit->second.end(); ptit++)
-        //     {
-        //         dbgs() << "PT: ";
-        //         for (auto bit = (*ptit).begin(); bit != (*ptit).end(); bit++)
-        //         {
-        //             dbgs() << getBBLabel(*bit) << " -> ";
-        //         }
-        //         dbgs() << "\n";
-        //     }
-        // }
 
         // Use FuncPathtypes to combine all possible Handler PATHTYPES combinations
         constructPathGraph(FuncPathTypes);
@@ -280,285 +261,12 @@ public:
         for (auto spt : completeFunc_kpath[&F])
         {
             dbgs() << spt.first << "\n";
+            for (auto _f : spt.second->ptFunc)
+                dbgs() << "->" << _f;
+            dbgs() << "\n";
         }
 
         assert(1 == 2);
-
-        {
-            // keyBBs
-            for (std::set<BasicBlock*>::iterator it = AnchorBBs.begin(); it != AnchorBBs.end(); it++)
-            {
-                std::string                                               funcName = (*it)->getParent()->getName().str();
-                int                                                       label = getBBLabelIdx((*it)->getParent(), *it);
-                std::map<std::string, std::vector<BasicBlock*>>::iterator keyVecit = keyVecs.find(funcName);
-
-                if (keyVecit == keyVecs.end())
-                {
-                    std::vector<BasicBlock*> v;
-                    v.push_back(*it);
-                    keyVecs.insert(std::map<std::string, std::vector<BasicBlock*>>::value_type(funcName, v));
-                }
-                else
-                {
-                    for (int i = 0; i < keyVecit->second.size(); i++)
-                    {
-                        int l = getBBLabelIdx((*it)->getParent(), keyVecit->second[i]);
-                        if (label < l)
-                        {
-                            keyVecit->second.insert(keyVecit->second.begin() + i, *it);
-                            break;
-                        }
-                        else if (i == keyVecit->second.size() - 1)
-                        {
-                            keyVecit->second.push_back(*it);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (keyVecs.empty())
-            {
-                std::vector<BasicBlock*> v;
-                keyVecs.insert(std::map<std::string, std::vector<BasicBlock*>>::value_type(F.getName().str(), v));
-            }
-            // 
-            for (std::map<std::string, std::vector<BasicBlock*>>::iterator it = keyVecs.begin(); it != keyVecs.end(); it++)
-            {
-                long p = 0;
-                errs() << "\n" << it->first << ":\n";
-                //  entryBlockkeyBB
-                for (int i = 0; i < it->second.size(); i++)
-                {
-                    p = traversePath(M, *M.getFunction(it->first), &(M.getFunction(it->first)->getEntryBlock()), (it->second)[i], paths);
-                    if (pathMap.find(&(M.getFunction(it->first)->getEntryBlock())) == pathMap.end())
-                    {
-                        std::map<BasicBlock*, long> dest;
-                        dest.insert(std::map<BasicBlock*, long>::value_type((it->second)[i], p));
-                        pathMap.insert(std::map<BasicBlock*, std::map<BasicBlock*, long>>::value_type(&(M.getFunction(it->first)->getEntryBlock()), dest));
-                    }
-                    else
-                    {
-                        pathMap[&(M.getFunction(it->first)->getEntryBlock())].insert(std::map<BasicBlock*, long>::value_type((it->second)[i], p));
-                    }
-                    errs() << it->first << " ---> " << getBBLabel((it->second)[i]) << ":";
-                    errs() << p << "\n";
-                    // ，origin->destBBs
-                    if (p != 0)
-                    {
-                        std::error_code err;
-                        std::string     fileName = outputDir + "/KEYBBS/" + it->first + "-" + getBBLabel(&(M.getFunction(it->first)->getEntryBlock())) + "-" + getBBLabel((it->second)[i]);
-                        raw_fd_ostream  fd(fileName, err);
-                        for (std::map<llvm::BasicBlock*, std::set<llvm::BasicBlock*>>::iterator cBit = completeEdges.begin(); cBit != completeEdges.end(); cBit++)
-                        {
-                            for (std::set<llvm::BasicBlock*>::iterator destit = cBit->second.begin(); destit != cBit->second.end(); destit++)
-                                fd << it->first << ":" << getBBLabel(cBit->first) << "-" << getBBLabel(*destit) << "\n";
-                        }
-                    }
-                    completeBBs.clear();
-                    completeEdges.clear();
-                }
-                //  entryBlockreturn
-                p = traversePath(M, *M.getFunction(it->first), &(M.getFunction(it->first)->getEntryBlock()), nullptr, paths);
-                if (pathMap.find(&(M.getFunction(it->first)->getEntryBlock())) == pathMap.end())
-                {
-                    std::map<BasicBlock*, long> dest;
-                    dest.insert(std::map<BasicBlock*, long>::value_type(nullptr, p));
-                    pathMap.insert(std::map<BasicBlock*, std::map<BasicBlock*, long>>::value_type(&(M.getFunction(it->first)->getEntryBlock()), dest));
-                }
-                else
-                {
-                    pathMap[&(M.getFunction(it->first)->getEntryBlock())].insert(std::map<BasicBlock*, long>::value_type(nullptr, p));
-                }
-                errs() << it->first << " ---> "
-                       << "RETURN"
-                       << ":";
-                errs() << p << "\n";
-                if (p != 0)
-                {
-                    std::error_code err;
-                    std::string     fileName = outputDir + "/KEYBBS/" + it->first + "-" + getBBLabel(&(M.getFunction(it->first)->getEntryBlock())) + "-" + "RETURN";
-                    raw_fd_ostream  fd(fileName, err);
-                    for (std::map<llvm::BasicBlock*, std::set<llvm::BasicBlock*>>::iterator cBit = completeEdges.begin(); cBit != completeEdges.end(); cBit++)
-                    {
-                        for (std::set<llvm::BasicBlock*>::iterator destit = cBit->second.begin(); destit != cBit->second.end(); destit++)
-                            fd << it->first << ":" << getBBLabel(cBit->first) << "-" << getBBLabel(*destit) << "\n";
-                    }
-                }
-                completeBBs.clear();
-                completeEdges.clear();
-                // keyBBreturn
-                for (int i = 0; i < it->second.size(); i++)
-                {
-                    p = traversePath(M, *M.getFunction(it->first), (it->second)[i], nullptr, paths);
-                    if (pathMap.find((it->second)[i]) == pathMap.end())
-                    {
-                        std::map<BasicBlock*, long> dest;
-                        dest.insert(std::map<BasicBlock*, long>::value_type(nullptr, p));
-                        pathMap.insert(std::map<BasicBlock*, std::map<BasicBlock*, long>>::value_type((it->second)[i], dest));
-                    }
-                    else
-                    {
-                        pathMap[(it->second)[i]].insert(std::map<BasicBlock*, long>::value_type(nullptr, p));
-                    }
-                    errs() << getBBLabel((it->second)[i]) << " ---> "
-                           << "RETURN"
-                           << ":";
-                    errs() << p << "\n";
-                    if (p != 0)
-                    {
-                        std::error_code err;
-                        std::string     fileName = outputDir + "/KEYBBS/" + it->first + "-" + getBBLabel((it->second)[i]) + "-" + "RETURN";
-                        raw_fd_ostream  fd(fileName, err);
-                        for (std::map<llvm::BasicBlock*, std::set<llvm::BasicBlock*>>::iterator cBit = completeEdges.begin(); cBit != completeEdges.end(); cBit++)
-                        {
-                            for (std::set<llvm::BasicBlock*>::iterator destit = cBit->second.begin(); destit != cBit->second.end(); destit++)
-                                fd << it->first << ":" << getBBLabel(cBit->first) << "-" << getBBLabel(*destit) << "\n";
-                        }
-                    }
-                    completeBBs.clear();
-                    completeEdges.clear();
-                }
-                for (int i = 0; i < it->second.size(); i++)
-                {
-                    for (int j = i + 1; j < it->second.size(); j++)
-                    {
-                        p = traversePath(M, *M.getFunction(it->first), (it->second)[i], (it->second)[j], paths);
-                        if (pathMap.find((it->second)[i]) == pathMap.end())
-                        {
-                            std::map<BasicBlock*, long> dest;
-                            dest.insert(std::map<BasicBlock*, long>::value_type((it->second)[j], p));
-                            pathMap.insert(std::map<BasicBlock*, std::map<BasicBlock*, long>>::value_type((it->second)[i], dest));
-                        }
-                        else
-                        {
-                            pathMap[(it->second)[i]].insert(std::map<BasicBlock*, long>::value_type((it->second)[j], p));
-                        }
-                        errs() << getBBLabel((it->second)[i]) << " ---> " << getBBLabel((it->second)[j]) << ":";
-                        errs() << p << "\n";
-                        if (p != 0)
-                        {
-                            std::error_code err;
-                            std::string     fileName = outputDir + "/KEYBBS/" + it->first + "-" + getBBLabel((it->second)[i]) + "-" + getBBLabel((it->second)[j]);
-                            raw_fd_ostream  fd(fileName, err);
-                            for (std::map<llvm::BasicBlock*, std::set<llvm::BasicBlock*>>::iterator cBit = completeEdges.begin(); cBit != completeEdges.end(); cBit++)
-                            {
-                                for (std::set<llvm::BasicBlock*>::iterator destit = cBit->second.begin(); destit != cBit->second.end(); destit++)
-                                    fd << it->first << ":" << getBBLabel(cBit->first) << "-" << getBBLabel(*destit) << "\n";
-                            }
-                        }
-                        completeBBs.clear();
-                        completeEdges.clear();
-                    }
-                }
-            }
-
-            // keyFuncs，keyBB，keyBBs
-            for (std::set<std::string>::iterator it = keyFuncs.begin(); it != keyFuncs.end(); it++)
-            {
-                std::vector<keyBBPathWithoutCall> r;
-                // BB，possiblePaths
-                std::vector<std::vector<BasicBlock*>> possiblePaths;
-
-                traverseFuncToReturnWithoutCall(M, *(M.getFunction(*it)), r);
-                errs() << "\nPossible AnchorBBs on the path:\n";
-                for (std::vector<keyBBPathWithoutCall>::iterator pit = r.begin(); pit != r.end(); pit++)
-                {
-                    if ((*pit).bb)
-                    {
-                        errs() << "☐ ";
-                        errs() << *it << ":" << getBBLabel((*pit).bb) << "\n";
-                    }
-                    else
-                    {
-                        errs() << "☑ ";
-                        errs() << *it << ":RETURN\n";
-                    }
-                    for (std::set<std::string>::iterator fit = (*pit).calledFuncs.begin(); fit != (*pit).calledFuncs.end(); fit++)
-                    {
-                        errs() << "    call:" << *fit << "\n";
-                    }
-                }
-                for (int i = 0; i < (int)pow(2, r.size() - 1); i++)
-                {
-                    std::vector<BasicBlock*> path;
-
-                    int n = i;
-                    for (std::vector<keyBBPathWithoutCall>::iterator pit = r.begin(); pit != r.end(); pit++)
-                    {
-                        if ((*pit).bb)
-                        {
-                            if (n % 2 == 1)
-                            {
-                                path.push_back((*pit).bb);
-                            }
-                            n = n / 2;
-                        }
-                        else
-                            path.push_back((*pit).bb);
-                    }
-                    possiblePaths.push_back(path);
-                }
-                int typeCount = 0;
-                // pathtraverse
-                for (std::vector<std::vector<BasicBlock*>>::iterator ppit = possiblePaths.begin(); ppit != possiblePaths.end(); ppit++)
-                {
-                    BasicBlock* origin = &(M.getFunction(*it)->getEntryBlock());
-                    long        total = 1;
-                    for (std::vector<BasicBlock*>::iterator bit = (*ppit).begin(); bit != (*ppit).end(); bit++)
-                    {
-                        if (origin == (*bit))
-                        {
-                            continue;
-                        }
-                        total = total * pathMap[origin][*bit];
-                        if (total == 0)
-                        {
-                            break;
-                        }
-                        origin = *bit;
-                    }
-                    if (total)
-                    {
-                        std::error_code err;
-                        std::string     fileName = outputDir + "/" + (*it) + "_Type_" + std::to_string(typeCount);
-                        raw_fd_ostream  fd(fileName, err);
-                        errs() << "\nType " << typeCount << "\nwith " << total << " paths\n";
-                        typeCount++;
-                        origin = &(M.getFunction(*it)->getEntryBlock());
-                        for (std::vector<BasicBlock*>::iterator bit = (*ppit).begin(); bit != (*ppit).end(); bit++)
-                        {
-                            std::vector<std::vector<llvm::BasicBlock*>> results;
-                            std::vector<llvm::BasicBlock*>              p;
-                            if (*bit)
-                                fd << "* " << origin->getParent()->getName().str() << ":" << getBBLabel((origin)) << " ----> " << (*bit)->getParent()->getName().str() << ":" << getBBLabel((*bit)) << "\n";
-                            else
-                                fd << "* " << origin->getParent()->getName().str() << ":" << getBBLabel((origin)) << " ----> " << *it << ":RETURN\n";
-                            // traversePath(M, *(origin->getParent()), origin,
-                            // *bit, p, results); for
-                            // (std::vector<std::vector<llvm::BasicBlock
-                            // *>>::iterator resultIt = results.begin();
-                            // resultIt != results.end(); resultIt++)
-                            // {
-                            //     fd << "PATH-" << resultIt - results.begin()
-                            //     << "\n"; for (std::vector<llvm::BasicBlock
-                            //     *>::iterator pathIt =
-                            //     (*resultIt).begin(); pathIt !=
-                            //     (*resultIt).end(); pathIt++)
-                            //     {
-                            //         fd
-                            //             <<
-                            //             (*pathIt)->getParent()->getName().str()
-                            //             << ":" << getBBLabel((*pathIt)) <<
-                            //             "\n";
-                            //     }
-                            // }
-                            origin = *bit;
-                        }
-                    }
-                }
-            }
-        }
         return false;
     }
 };
@@ -573,49 +281,159 @@ void CFGPass::identifyKeyBasicBlock(Module& M, Function& F)
         var_analyzer->SearchKeyVar(M, f);
     }
 
+
+    var_analyzer->all_sess.clear();
+    for (auto sess_node : var_analyzer->sess_graph)
+    {
+        if (var_analyzer->all_sess.find(sess_node.first) == var_analyzer->all_sess.end())
+        {
+            std::set<llvm::Value*> result;
+            var_analyzer->DFS(sess_node.first, result);
+            var_analyzer->all_sess.insert(result.begin(), result.end());
+            var_analyzer->SESSIONS.push_back(result);
+            for (auto _v : result)
+            {
+                var_analyzer->SESSIONS_idx[_v] = var_analyzer->SESSIONS.size() - 1;
+            }
+        }
+    }
+
+    // dbgs() << "[DBG]: " << var_analyzer->SESSIONS.size() << "\n";
+    // for (auto sess : var_analyzer->SESSIONS)
+    // {
+    //     dbgs() << sess.size() << "\n";
+    // }
+
+    std::map<int, int> sess_set_freq;
+    for (BasicBlock& BB : F)
+    {
+        for (Instruction& I : BB)
+        {
+            Use* operand_list = I.getOperandList();
+            for (int i = 0; i < I.getNumOperands(); i++)
+            {
+                if (var_analyzer->SESSIONS_idx.find(operand_list[i]) != var_analyzer->SESSIONS_idx.end())
+                {
+                    if (sess_set_freq.find(var_analyzer->SESSIONS_idx[operand_list[i]]) == sess_set_freq.end())
+                        sess_set_freq[var_analyzer->SESSIONS_idx[operand_list[i]]] = 1;
+                    else
+                        sess_set_freq[var_analyzer->SESSIONS_idx[operand_list[i]]] += 1;
+                }
+            }
+        }
+    }
+
+    int _max = 0;
+    for (auto sess : sess_set_freq)
+    {
+        if (sess.second >= _max)
+        {
+            _max = sess.second;
+            var_analyzer->Handler_session = sess.first;
+        }
+    }
+
+
+    errs() << "[INFO]: Identifing the session in operations\n";
+    // Try to get the context of `DELIVER` operation backwardly, consist of the `Session` variables
+    std::map<llvm::Value*, std::vector<Function*>> sess_contexts;
     for (auto key_var : var_analyzer->key_variables)
     {
-        // dbgs() << "-----------------KEYVAR-----------------\n" << key_var->name << "\n\n\n\n";
+        if (key_var->varType == "Msg" && var_analyzer->SemanticKeyBasicBlocks[key_var].size() > 0)
+        {
+            for (auto sbb : var_analyzer->SemanticKeyBasicBlocks[key_var])
+            {
+                sess_contexts.clear();
+                sbb.second->contexts.clear();
+                for (auto inst : sbb.second->semantic_inst)
+                {
+                    Use* operand_list = inst.first->getOperandList();
+                    for (int i = 0; i < inst.first->getNumOperands(); i++)
+                    {
+                        if (var_analyzer->all_sess.find(operand_list[i]) != var_analyzer->all_sess.end())
+                        {
+                            dbgs() << *(inst.first) << "\n";
+                            var_analyzer->PointerAnalyzer->FindSessionContext(operand_list[i], var_analyzer->sess_type, sess_contexts);
+                            // [TODO]: 可以只分析deliver第一个参数吗, 一般第一个destination (socket)
+                            break;
+                        }
+                    }
+                }
+                for (auto ctx : sess_contexts)
+                {
+                    if (var_analyzer->SESSIONS[var_analyzer->Handler_session].find(ctx.first) != var_analyzer->SESSIONS[var_analyzer->Handler_session].end())
+                    {
+                        std::string str;
+                        for (auto t : ctx.second)
+                        {
+                            str += "->" + t->getName().str();
+                        }
+                        if (sbb.second->call_contexts.find(str) == sbb.second->call_contexts.end())
+                        {
+                            sbb.second->call_contexts.insert(std::map<std::string, std::vector<llvm::Function*>>::value_type(str, ctx.second));
+                            // dbgs() << str << "\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    dbgs() << "{\n";
+    for (auto key_var : var_analyzer->key_variables)
+    {
+        if (key_var->varType != "Msg")
+            continue;
+        dbgs() << "-----------------KEYVAR-----------------\n" << key_var->name << "\n\n\n\n";
+        for (auto sbb : var_analyzer->SemanticKeyBasicBlocks[key_var])
+        {
+            DebugLoc dbl = sbb.first->back().getDebugLoc();
+            if (dbl.get())
+            {
+                auto* Scope = cast<DIScope>(dbl.getScope());
+                dbgs() << Scope->getDirectory().str() + "/" + Scope->getFilename().str() << ": " << dbl->getLine() << ":" << dbl->getColumn() << "\n";
+            }
+            else
+            {
+                dbgs() << "No debug info\n";
+            }
+
+            dbgs() << "[SEMANTIC]: " << sbb.second->semantics << "\n";
+            dbgs() << "[Instructions]: \n";
+            for (auto var : sbb.second->semantic_inst)
+            {
+                dbgs() << *(var.first) << "\n";
+            }
+
+            dbgs() << "[CONTEXTS]: \n";
+            for (auto kbb_c : sbb.second->contexts)
+            {
+                for (auto bb : kbb_c)
+                {
+                    // errs() << bb->getParent()->getName() << ":" <<
+                    //     getBBLabel(bb) << " --> ";
+                    dbl = bb->back().getDebugLoc();
+                    if (dbl.get())
+                    {
+                        auto* Scope = cast<DIScope>(dbl.getScope());
+                        dbgs() << Scope->getFilename().str() << ": " << dbl->getLine() << ":" << dbl->getColumn() << " --> ";
+                    }
+                }
+                dbgs() << "\n";
+            }
+
+            dbgs() << "[Basic Block]: \n" << *(sbb.first) << "\n\n";
+            dbgs() << "----------------------------------\n";
+        }
+    }
+    dbgs() << "}\n";
+
+    for (auto key_var : var_analyzer->key_variables)
+    {
         for (auto sbb : var_analyzer->SemanticKeyBasicBlocks[key_var])
         {
             KeyBasicBlocks.insert(sbb.first);
-            // DebugLoc dbl = sbb.first->back().getDebugLoc();
-            // if (dbl.get())
-            // {
-            //     auto* Scope = cast<DIScope>(dbl.getScope());
-            //     dbgs() << Scope->getDirectory().str() + "/" + Scope->getFilename().str() << ": " << dbl->getLine() << ":" << dbl->getColumn() << "\n";
-            // }
-            // else
-            // {
-            //     errs() << "No debug info\n";
-            // }
-
-            // dbgs() << "[SEMANTIC]: " << sbb.second->semantics << "\n";
-            // dbgs() << "[Value]: \n";
-            // for (auto var : sbb.second->values)
-            // {
-            //     errs() << *var << "\n";
-            // }
-
-            // dbgs() << "[CONTEXTS]: \n";
-            // for (auto kbb_c : sbb.second->contexts)
-            // {
-            //     for (auto bb : kbb_c)
-            //     {
-            //         // errs() << bb->getParent()->getName() << ":" <<
-            //         //     getBBLabel(bb) << " --> ";
-            //         dbl = bb->back().getDebugLoc();
-            //         if (dbl.get())
-            //         {
-            //             auto* Scope = cast<DIScope>(dbl.getScope());
-            //             dbgs() << Scope->getFilename().str() << ": " << dbl->getLine() << ":" << dbl->getColumn() << " --> ";
-            //         }
-            //     }
-            //     dbgs() << "\n";
-            // }
-
-            // dbgs() << "[Basic Block]: \n" << *(sbb.first) << "\n\n";
-            // dbgs() << "----------------------------------\n";
         }
     }
 }
@@ -634,8 +452,8 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
     }
     for (it = insts.begin(); it != insts.end(); it++)
     {
-        Instruction* inst = *it;
-        unsigned int opcode = inst->getOpcode();
+        llvm::Instruction* inst = *it;
+        unsigned int       opcode = inst->getOpcode();
 
         switch (opcode)
         {
@@ -666,7 +484,7 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
             Fit = ALLFunctions.find(calledFuncName);
             Function& calledFunc = *M.getFunction(calledFuncName);
 
-            // (broker)
+            // 禁止进入系统函数(只关注broker中声明的函数)
             if (Fit != ALLFunctions.end() && calledFuncName != "log__printf")
             {
                 if (Fit->second == 1)
@@ -743,7 +561,7 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
 
             Fit = ALLFunctions.find(calledFuncName);
             Function& calledFunc = *M.getFunction(calledFuncName);
-            // (broker)
+            // 禁止进入系统函数(只关注broker中声明的函数)
             if (Fit != ALLFunctions.end() && calledFuncName != "log__printf")
             {
                 // errs() << "Call function: " << calledFuncName <<
@@ -835,6 +653,9 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
                     case mqttactic::WRITE1:
                         semantic += key_var->varType + "_add";
                         break;
+                    case mqttactic::DELIVER:
+                        semantic += "DELIVER";
+                        break;
                     default:
                         errs() << "[ERROR]: Cannot parse semantic of: " << *(siit->first) << "\n";
                         break;
@@ -869,14 +690,14 @@ int CFGPass::traverseCFG(Module& M, Function& F, BasicBlock* origin, std::vector
     for (BasicBlock* Succ : successors(origin))
     {
         succCount++;
-        // 
+        // 发现循环
         if (L != NULL && L->getHeader() == Succ)
         {
             SmallVector<BasicBlock*, 8>                         ExitBlocks;
             SmallVector<std::pair<BasicBlock*, BasicBlock*>, 8> ExitEdges;
             L->getExitBlocks(ExitBlocks);
             L->getExitEdges(ExitEdges);
-            //  e.g., %100->%30
+            // 保存循环边 e.g., %100->%30
             std::map<BasicBlock*, std::set<BasicBlock*>>::iterator eit = completeEdges.find(origin);
             if (eit == completeEdges.end())
             {
@@ -944,7 +765,7 @@ int CFGPass::traverseCFG(Module& M, Function& F, BasicBlock* origin, std::vector
         PathCount += c;
         if (c > 0)
         {
-            // origindest
+            // 保存origin到dest所有边
             std::map<BasicBlock*, std::set<BasicBlock*>>::iterator eit = completeEdges.find(origin);
             if (eit == completeEdges.end())
             {
@@ -1065,6 +886,15 @@ void CFGPass::constructPathGraph(std::map<llvm::Function*, std::vector<PathType>
 
 void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticPathType> paths, std::map<Function*, int> loopStatus, std::vector<BasicBlock*> contextPath)
 {
+    std::string func = origin->bb->getParent()->getName().str();
+    for (auto& p : paths)
+    {
+        if (p.ptFunc.size() == 0 || (p.ptFunc.size() > 0 && func != p.ptFunc.back()))
+        {
+            p.ptFunc.push_back(func);
+        }
+    }
+
     if (origin->callSite == nullptr && origin->isVirtualHead == false && origin->isVirtualTail == false)
     {
         if (KeyBasicBlocks.find(origin->bb) != KeyBasicBlocks.end() && !isFakeAnchorBB(origin->bb, contextPath))
@@ -1076,6 +906,7 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
                 for (auto s : origin->semanticInsts)
                 {
                     std::string raw_s = s.second.substr(s.second.find_last_of("===") + 1);
+
                     if (p.ptSemanticVec.empty() || (p.ptSemanticVec.size() > 0 && p.ptSemanticVec.back() != raw_s))
                     {
                         p.ptSemanticVec.push_back(raw_s);
@@ -1117,6 +948,7 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
                 {
                     SemanticPathType p(current_path);
                     p.pt.insert(p.pt.end(), spt.second->pt.begin(), spt.second->pt.end());
+                    p.ptFunc.insert(p.ptFunc.end(), spt.second->ptFunc.begin(), spt.second->ptFunc.end());
                     if (p.ptSemanticVec.empty() || (p.ptSemanticVec.size() > 0 && p.ptSemanticVec.back() != spt.second->ptSemanticVec.front()))
                     {
                         p.ptSemanticVec.insert(p.ptSemanticVec.end(), spt.second->ptSemanticVec.begin(), spt.second->ptSemanticVec.end());
@@ -1139,12 +971,12 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
         }
         else
         {
-            dbgs() << "[ERROR]: Loop in the path, loopStatus = " << loopStatus[calledFunc] << "\n";
+            errs() << "[ERROR]: Loop in the path, loopStatus = " << loopStatus[calledFunc] << "\n";
             loopStatus[calledFunc] -= 1;
         }
     }
 
-    // When encounter the virtual tail Node of a function, means we need to return to the last CALLSITE
+    // When encounter the virtual tail Node of a function, it means we need to return to the last CALLSITE
     else if (origin->isVirtualTail)
     {
         if (completeFunc_kpath.find(&F) == completeFunc_kpath.end())
@@ -1178,26 +1010,26 @@ void CFGPass::printFuncSliceGraph(Module& M, Function& F, SemanticABB* origin, s
         for (auto s : path)
         {
             if (s->isVirtualHead)
-                dbgs() << " -> "
+                errs() << " -> "
                        << "HEAD";
             else if (s->isVirtualTail)
-                dbgs() << " -> "
+                errs() << " -> "
                        << "TAIL";
             else if (s->callSite)
             {
 
-                dbgs() << " -> "
+                errs() << " -> "
                        << "CALLSITE (" << s->callSite->getName().str() << ")";
             }
             else
             {
                 for (auto SI : s->semanticInsts)
                 {
-                    dbgs() << " -> " << SI.second;
+                    errs() << " -> " << SI.second;
                 }
             }
         }
-        dbgs() << "\n";
+        errs() << "\n";
         return;
     }
     for (auto succ : FuncSliceGraph[&F][origin])
@@ -1217,6 +1049,11 @@ bool CFGPass::isFakeAnchorBB(BasicBlock* bb, std::vector<BasicBlock*> contextPat
     {
         if (var_analyzer->SemanticKeyBasicBlocks[key_var].find(bb) != var_analyzer->SemanticKeyBasicBlocks[key_var].end())
         {
+            // [TODO]: Msg Session变量暂时不分析
+            if (key_var->varType == "Msg" || key_var->varType == "Session")
+            {
+                return false;
+            }
             contexts.insert(contexts.end(), var_analyzer->SemanticKeyBasicBlocks[key_var][bb]->contexts.begin(), var_analyzer->SemanticKeyBasicBlocks[key_var][bb]->contexts.end());
         }
     }
@@ -1230,6 +1067,7 @@ bool CFGPass::isFakeAnchorBB(BasicBlock* bb, std::vector<BasicBlock*> contextPat
         }
         else
         {
+
             BasicBlock* first_bb = const_cast<BasicBlock*>(ctx[0]);
             if (std::find(contextPath.begin(), contextPath.end(), first_bb) != contextPath.end())
             {
@@ -1276,25 +1114,6 @@ int CFGPass::getBBLabelIdx(const Function* func, const BasicBlock* Node)
         idx++;
     }
     return idx;
-}
-
-void CFGPass::readKBBFile(std::string file)
-{
-    std::string   kbb_str;
-    std::ifstream infile(file);
-    if (infile.is_open())
-    {
-        while (!infile.eof())
-        {
-            std::getline(infile, kbb_str);
-            if (ALLBasicBlocks.find(kbb_str) != ALLBasicBlocks.end())
-                AnchorBBs.insert(ALLBasicBlocks[kbb_str]);
-            else
-            {
-                errs() << "[ERROR]: can not find key basicblock: " << kbb_str << "\n";
-            }
-        }
-    }
 }
 
 bool CFGPass::traverseFuncToEnd(Module& M, Function& F, BasicBlock* end, bool foundEnd, std::vector<keyBBPath> path, std::vector<std::vector<keyBBPath>>& endPath, std::vector<std::vector<keyBBPath>>& results)
@@ -1355,8 +1174,8 @@ bool CFGPass::traverseFuncToEnd(Module& M, Function& F, BasicBlock* end, bool fo
         }
         for (Instruction& I : BB)
         {
-            Instruction* inst = &I;
-            unsigned int opcode = inst->getOpcode();
+            llvm::Instruction* inst = &I;
+            unsigned int       opcode = inst->getOpcode();
             switch (opcode)
             {
             case Instruction::Call: {
@@ -1494,8 +1313,8 @@ void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath
         }
         for (Instruction& I : BB)
         {
-            Instruction* inst = &I;
-            unsigned int opcode = inst->getOpcode();
+            llvm::Instruction* inst = &I;
+            unsigned int       opcode = inst->getOpcode();
             switch (opcode)
             {
             case Instruction::Call: {
@@ -1559,7 +1378,7 @@ void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath
                 break;
             }
             case Instruction::Ret: {
-                // ，null basicblock，
+                // 遇到返回，则插入一个null basicblock，代表返回
                 if (path[path.end() - path.begin() - 1].bb != &BB)
                 {
                     struct keyBBPath k;
@@ -1593,8 +1412,8 @@ void CFGPass::traverseFuncToReturnWithoutCall(Module& M, Function& F, std::vecto
         }
         for (Instruction& I : BB)
         {
-            Instruction* inst = &I;
-            unsigned int opcode = inst->getOpcode();
+            llvm::Instruction* inst = &I;
+            unsigned int       opcode = inst->getOpcode();
             switch (opcode)
             {
             case Instruction::Call: {
@@ -1646,7 +1465,7 @@ void CFGPass::traverseFuncToReturnWithoutCall(Module& M, Function& F, std::vecto
                 break;
             }
             case Instruction::Ret: {
-                // ，null basicblock，
+                // 遇到返回，则插入一个null basicblock，代表返回
                 struct keyBBPathWithoutCall k;
                 std::set<std::string>       F;
                 k.bb = nullptr;
@@ -1688,7 +1507,7 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
             completeBBs.insert(std::map<BasicBlock*, long>::value_type(origin, 1));
         return 1;
     }
-    // 
+    // 在途中发现其他变量
     else if (paths.size() > 1 && AnchorBBs.find(origin) != AnchorBBs.end())
         return 0;
 
@@ -1701,14 +1520,14 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
     for (BasicBlock* Succ : successors(origin))
     {
         succCount++;
-        // 
+        // 发现循环
         if (L != NULL && L->getHeader() == Succ)
         {
             SmallVector<BasicBlock*, 8>                         ExitBlocks;
             SmallVector<std::pair<BasicBlock*, BasicBlock*>, 8> ExitEdges;
             L->getExitBlocks(ExitBlocks);
             L->getExitEdges(ExitEdges);
-            //  e.g. %100->%30
+            // 保存循环边 e.g. %100->%30
             std::map<BasicBlock*, std::set<BasicBlock*>>::iterator eit = completeEdges.find(origin);
             if (eit == completeEdges.end())
             {
@@ -1742,7 +1561,7 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
         else
         {
             int count = std::count(paths.begin(), paths.end(),
-                                   Succ);  // ，==
+                                   Succ);  // 查找对象类型时，需要该类提供重载==函数
             if (count > 2)
             {
                 continue;
@@ -1756,7 +1575,7 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
         PathCount += c;
         if (c > 0)
         {
-            // origindest
+            // 保存origin到dest所有边
             std::map<BasicBlock*, std::set<BasicBlock*>>::iterator eit = completeEdges.find(origin);
             if (eit == completeEdges.end())
             {
@@ -1792,7 +1611,7 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
         results.push_back(paths);
         return 1;
     }
-    // 
+    // 在途中发现其他变量
     else if (paths.size() > 1 && AnchorBBs.find(origin) != AnchorBBs.end())
         return 0;
 
@@ -1804,7 +1623,7 @@ long CFGPass::traversePath(Module& M, Function& F, BasicBlock* origin, BasicBloc
     for (BasicBlock* Succ : successors(origin))
     {
         succCount++;
-        // 
+        // 发现循环
         if (L != NULL && L->getHeader() == Succ)
         {
             SmallVector<BasicBlock*, 8> ExitBlocks;

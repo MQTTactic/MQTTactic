@@ -4,7 +4,7 @@ import sys
 import json
 import pathTypes
 from termcolor import *
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #存放c.py所在的绝对路径
 
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
@@ -54,13 +54,13 @@ class Model:
     def __init__(self, broker_name, basemodel_file, output_file):
         self.broker_name = broker_name
         self.config = broker_config
-        # goto label
+        # goto label累加
         self.label = 0
-        # basemodel 
+        # basemodel 源码
         self.source_code = []
-        #  {'handle__pubrel':(begin_line,end_lien)} 
+        # 保存 {'handle__pubrel':(begin_line,end_lien)} 左含右不含
         self.source_code_funcs = {}
-        # (，handle__pubrel1)
+        # 保存最终插入的路径(以函数为单位，例如handle__pubrel有1条路径)
         self.paths = {}
         self.param = {
             'handle__publish_qos0': 'index, t',
@@ -115,7 +115,7 @@ class Model:
                 else:
                     break
 
-    # 
+    # 定义代码片段
     def AuthorizationPub(self, client, topic, label='undefinedType'):
         label = f'LABEL_{self.label}_{label}'
         self.label += 1
@@ -232,7 +232,7 @@ class Model:
         fi;'''
             return (code, label)
 
-    # pubrec
+    # 额外的pubrec
     def CreateMessage(self, client, topic, qos, label='undefinedType'):
         label = f'LABEL_{self.label}_{label}'
         self.label += 1
@@ -317,7 +317,7 @@ class Model:
                     func_stack_flag = False
         return funcs
 
-    # ，
+    # 针对一个函数，获取可以插入的点
     def GetInsertionPoint(self, begin_line, end_line):
         points = [begin_line, end_line]
         for i in range(begin_line, end_line):
@@ -326,7 +326,7 @@ class Model:
                 points.insert(-1, i + 1)
         return points
 
-    # 
+    # 真实插入
     def Insert(self, handler, content):
         results = []
         func_begin_line = self.source_code_funcs[handler][0]
@@ -416,7 +416,7 @@ class Model:
         return results
 
     def BaseHandlePubrel(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"PUBREL_entry_point": [], "PUBREL": [], "PUBREL_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -438,7 +438,7 @@ class Model:
         self.source_code_funcs['handle__pubrel'] = (edges['PUBREL'][0], edges['PUBREL'][-1])
 
     def BaseHandleConnect(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"CONNECT_entry_point": [], "CONNECT_auth_success": [], "CONNECT_cleanStart_true": [], "CONNECT_cleanStart_false": [], "CONNECT_will_message": [], "CONNECT_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -461,7 +461,7 @@ class Model:
         self.source_code_funcs['handle__connect_cleanStartF'] = (edges['CONNECT_cleanStart_false'][0], edges['CONNECT_cleanStart_false'][-1])
 
     def BaseHandlePublish(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"PUBLISH_entry_point": [], "PUBLISH": [], "PUBLISH_QoS0_step2": [], "PUBLISH_QoS1_step2": [], "PUBLISH_QoS2_step2": [], "PUBLISH_retained_QoS0_step2": [], "PUBLISH_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -486,7 +486,7 @@ class Model:
         self.source_code_funcs['handle__publish_qos0_retained'] = (edges['PUBLISH_retained_QoS0_step2'][0], edges['PUBLISH_retained_QoS0_step2'][-1])
 
     def BaseHandleSubscribe(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"SUBSCRIBE_entry_point": [], "SUBSCRIBE": [], "SUBSCRIBE_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -508,7 +508,7 @@ class Model:
         self.source_code_funcs['handle__subscribe'] = (edges['SUBSCRIBE'][0], edges['SUBSCRIBE'][-1])
 
     def BaseHandleUnSubscribe(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"UNSUBSCRIBE_entry_point": [], "UNSUBSCRIBE": [], "UNSUBSCRIBE_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -530,7 +530,7 @@ class Model:
         self.source_code_funcs['handle__unsubscribe'] = (edges['UNSUBSCRIBE'][0], edges['UNSUBSCRIBE'][-1])
 
     def BaseAclRevoke(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"ACL_revoke": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -552,7 +552,7 @@ class Model:
         self.source_code_funcs['ACL_revoke'] = (edges['ACL_revoke'][0], edges['ACL_revoke'][-1])
 
     def BaseHandleDisconnect(self, begin_line, end_line):
-        # Base Modelhandler
+        # Base Model上handler的边
         edges = {"DISCONNECT_entry_point": [], "DISCONNECT": [], "DISCONNECT_end": []}
         funcs = self.SplitFunction(begin_line, end_line)
         for idx, f in enumerate(funcs):
@@ -579,7 +579,7 @@ class Model:
             for path in path_types['handle__pubrel']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -587,7 +587,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -604,23 +604,23 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__pubrel_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
                             if (acl_check_stack != [] and self.config['acl_check'] in acl_check_stack[-1] and self.config['will'] in acl_check_stack[-1]):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 acl_check_stack.append(op)
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
                             insert.append((self.pubrel_insert_point['PUBREL'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.pubrel_insert_point['PUBREL'][2], insert_code))
-                # 
+                # 发现这条路径没有终点
                 if (False):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__pubrel : {path}", "red"))
                 else:
                     handle__pubrel.append((insert, type))
@@ -633,7 +633,7 @@ class Model:
             for path in path_types['handle__connect_cleanStartT']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -643,7 +643,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -661,7 +661,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__connect_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
@@ -672,14 +672,14 @@ class Model:
                             elif (will_count == 0 and self.config['will'] in op):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 will_count += 1
-                        # cleanStart=true deliver
+                        # cleanStart=true deliver为无效操作
                         if (insert_flag == 0 and self.config['deliver'] in op):
                             insert_flag = 1
                         elif (insert_code != ''):
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_true'][0], insert_code))
-                # connack
+                # 发现这条路径没有connack
                 if (False):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__connect_cleanStartT : {path}", "red"))
                 else:
                     handle__connect_cleanStartT.append((insert, type))
@@ -688,7 +688,7 @@ class Model:
             for path in path_types['handle__connect_cleanStartF']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -698,7 +698,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -717,7 +717,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__connect_end'] in op):
                             end_flag = True
                         elif (self.config['deliver_to_subscribers'] in op):
@@ -730,7 +730,7 @@ class Model:
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 will_count += 1
                                 will_flag = True
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver'] in op):
                             insert_flag = 1
                         elif (will_flag):
@@ -740,9 +740,9 @@ class Model:
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_false'][0], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.connect_insert_point['CONNECT_cleanStart_false'][2], insert_code))
-                # connack
+                # 发现这条路径没有connack
                 if (False):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__connect_cleanStartF : {path}", "red"))
                 elif (insert_flag == 0):
                     pass
@@ -759,13 +759,13 @@ class Model:
             for path in path_types['handle__publish_qos0']:
                 type = ''
                 insert = []
-                # deliver_to_subscribers
+                # 标识插在deliver_to_subscribers前还是后
                 insert_flag = 0
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -774,24 +774,24 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
                             pass
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-                        # deliver_to_subscribers
+                        # 额外的deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='0', label=type)
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers前
                             insert.append((self.publish_insert_point['PUBLISH_QoS0_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers后
                             insert.append((self.publish_insert_point['PUBLISH_QoS0_step2'][2], insert_code))
-                # publish_qos0deliver_to_subscribers
+                # 发现这条publish_qos0路径没有deliver_to_subscribers
                 if (insert_flag == 0):
                     print(colored(f"Error: error/uncomplete path type of handle__publish_qos0 : {path}", "red"))
                 else:
@@ -802,13 +802,13 @@ class Model:
                 type = ''
                 insert = []
                 insert_flag = 0
-                # handler
+                # 标识handler的过程是否完整
                 end_flag = False
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -817,25 +817,25 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos2end，，session
+                        # 在处理qos0时，出现qos2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
                             end_flag = True
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-                        # deliver_to_subscribers
+                        # 额外的deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='1', label=type)
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers前
                             insert.append((self.publish_insert_point['PUBLISH_QoS1_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers后
                             insert.append((self.publish_insert_point['PUBLISH_QoS1_step2'][2], insert_code))
                 if (insert_flag == 0):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__publish_qos1 : {path}", "red"))
                 else:
                     handle__publish_qos1.append((insert, type))
@@ -845,14 +845,14 @@ class Model:
                 type = ''
                 insert = []
                 insert_flag = 0
-                # handler
+                # 标识handler的过程是否完整
                 end_flag = False
                 if (len(self.publish_insert_point['PUBLISH_QoS2_step2']) == 4):
                     for op in path:
                         if ('Type-' in op):
                             type = op.replace('-', '_').replace(',', '_')
                         else:
-                            # 
+                            # 获取插入的代码内容
                             insert_code = ''
                             if (self.config['acl_check'] in op):
                                 foo = self.GetAclCheck(op)
@@ -861,7 +861,7 @@ class Model:
                                 else:
                                     print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                     exit()
-                            # qos2，qos1end，，session
+                            # 在处理qos2时，出现qos1的end，并非是处理本条消息，而是session中保存的其他消息
                             elif (self.config['handle__publish_qos1_end'] in op):
                                 pass
                             elif (self.config['handle__publish_qos2_end'] in op):
@@ -869,20 +869,20 @@ class Model:
                                     end_flag = True
                                 else:
                                     insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-                            # deliver_to_subscribers
+                            # 额外的deliver_to_subscribers
                             elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                                 insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='2', label=type)
-                            # 
+                            # 获取插入的位置
                             if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                                 insert_flag = 1
                             elif (insert_flag == 0 and insert_code != ''):
-                                # deliver_to_subscribers
+                                # 插在deliver_to_subscribers前
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][1], insert_code))
                             elif (insert_flag == 1 and insert_code != ''):
-                                # deliver_to_subscribers
+                                # 插在deliver_to_subscribers后
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][2], insert_code))
                     if (insert_flag == 0):
-                        # TODO: ，BaseModel，
+                        # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                         print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
@@ -891,7 +891,7 @@ class Model:
                         if ('Type-' in op):
                             type = op.replace('-', '_').replace(',', '_')
                         else:
-                            # 
+                            # 获取插入的代码内容
                             insert_code = ''
                             if (self.config['acl_check'] in op):
                                 foo = self.GetAclCheck(op)
@@ -905,14 +905,14 @@ class Model:
                                     end_flag = True
                                 else:
                                     insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-                            # deliver_to_subscribers
+                            # 额外的deliver_to_subscribers
                             elif (self.config['deliver_to_subscribers'] in op):
                                 insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='2', label=type)
-                            # 
+                            # 获取插入的位置
                             if (insert_code != ''):
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][0], insert_code))
                     if (False):
-                        # TODO: ，BaseModel，
+                        # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                         print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
@@ -921,13 +921,13 @@ class Model:
             for path in path_types['handle__publish_qos0_retained']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -936,26 +936,26 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
                             pass
                         elif (self.config['handle__publish_qos2_end'] in op):
                             insert_code = self.CreateMessage(client='index', topic='t', qos='2', label=type)
-                        # deliver_to_subscribers
+                        # 额外的deliver_to_subscribers
                         elif (insert_flag == 1 and self.config['deliver_to_subscribers'] in op):
                             insert_code = self.CreateDeliverToSubscribers(client='index', topic='t', qos='0', label=type)
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                         elif (insert_flag == 0 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers前
                             insert.append((self.publish_insert_point['PUBLISH_retained_QoS0_step2'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
-                            # deliver_to_subscribers
+                            # 插在deliver_to_subscribers后
                             insert.append((self.publish_insert_point['PUBLISH_retained_QoS0_step2'][2], insert_code))
-                # publish_qos0deliver
+                # 发现这条publish_qos0路径没有deliver
                 if (insert_flag == 0):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: error path type of handle__publish_qos0_retained : {path}", "red"))
                 else:
                     handle__publish_qos0_retained.append((insert, type))
@@ -967,7 +967,7 @@ class Model:
             for path in path_types['handle__subscribe']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 end_flag = False
                 sub_flag = False
@@ -976,7 +976,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -1001,7 +1001,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__subscribe_end'] in op):
                             end_flag = True
                         elif (self.config['sub_add'] in op):
@@ -1010,7 +1010,7 @@ class Model:
                             if (acl_check_stack != [] and self.config['acl_check'] in acl_check_stack[-1] and self.config['will'] in acl_check_stack[-1]):
                                 insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
                                 acl_check_stack.append(op)
-                        # 
+                        # 获取插入的位置
                         if (self.config['deliver'] in op and insert_flag == 0):
                             insert_flag = 1
 
@@ -1020,11 +1020,11 @@ class Model:
                             insert.append((self.subscribe_insert_point['SUBSCRIBE'][1], insert_code))
                         elif (insert_flag == 1 and insert_code != ''):
                             insert.append((self.subscribe_insert_point['SUBSCRIBE'][2], insert_code))
-                # 
+                # 发现这条路径没有终点
                 if (False):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__subscribe : {path}", "red"))
-                # handle__subscriberetained message
+                # handle__subscribe没有处理retained message
                 elif (insert_flag == 0 or not sub_flag):
                     pass
                 else:
@@ -1045,7 +1045,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -1070,7 +1070,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # qos0，qos1，2end，，session
+                        # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__unsubscribe_end'] in op):
                             end_flag = True
                         elif (self.config['sub_remove'] in op):
@@ -1082,11 +1082,11 @@ class Model:
 
                         if (insert_code != ''):
                             insert.append((self.unsubscribe_insert_point['UNSUBSCRIBE'][0], insert_code))
-                # 
+                # 发现这条路径没有终点
                 if (False):
-                    # TODO: ，BaseModel，
+                    # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
                     print(colored(f"Error: can not find the end of handle__unsubscribe : {path}", "red"))
-                # handle__unsubscriberetained message
+                # handle__unsubscribe没有处理retained message
                 elif (not sub_flag):
                     pass
                 else:
@@ -1099,7 +1099,7 @@ class Model:
             for path in path_types['handle__disconnect']:
                 type = ''
                 insert = []
-                # deliver
+                # 标识插在deliver前还是后
                 insert_flag = 0
                 end_flag = False
                 acl_check_stack = []
@@ -1107,7 +1107,7 @@ class Model:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)
@@ -1121,7 +1121,7 @@ class Model:
                             else:
                                 print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
-                        # 
+                        # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
                             insert_flag = 1
                             insert_code = self.CreateDeliverToSubscribersForWillmsg(client='index', label=type)
@@ -1137,14 +1137,14 @@ class Model:
             for path in path_types['handle__revoke']:
                 type = ''
                 insert = []
-                # 
+                # 标识撤销权限的变量是否有效
                 insert_flag = 0
                 acl_check_stack = []
                 for op in path:
                     if ('Type-' in op):
                         type = op.replace('-', '_').replace(',', '_')
                     else:
-                        # 
+                        # 获取插入的代码内容
                         insert_code = ''
                         if (self.config['acl_check'] in op):
                             foo = self.GetAclCheck(op)

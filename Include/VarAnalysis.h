@@ -23,7 +23,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IR/TypeFinder.h"
-#include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
@@ -47,6 +46,17 @@ public:
     mqttactic::PTA*                                                                    PointerAnalyzer;
 
     std::vector<mqttactic::KeyVariable*> key_variables;
+    // Get the Type of session variable
+    Type* sess_type;
+    // Store all of the `session`-classified set
+    std::vector<std::set<Value*>> SESSIONS;
+    // Store which set a value belongs to
+    std::map<Value*, int> SESSIONS_idx;
+    int                   Handler_session;
+    // Store all of the `session` value
+    std::set<Value*>                         all_sess;
+    std::map<Value*, std::map<Value*, bool>> sess_graph;
+
 
     VarAnalysis(Module& M)
     {
@@ -55,6 +65,7 @@ public:
         dbgFinder->processModule(M);
         std::vector<llvm::StructType*> struct_set;
         struct_set = M.getIdentifiedStructTypes();
+
         for (std::vector<llvm::StructType*>::iterator sit = struct_set.begin(); sit != struct_set.end(); sit++)
         {
             mqttactic::NamedStructType* named_struct = new mqttactic::NamedStructType();
@@ -82,8 +93,15 @@ public:
             }
         }
 
+
+        sess_type = ParseType(mqttactic::Session);
+        assert(sess_type != nullptr && "[ERROR]: Wrong Session type configured!\n");
+
+        //////////////////////////////////////////state variables//////////////////////////////////////////////////////
+
         std::string              s;
         std::vector<std::string> s_split;
+
 
         s = mqttactic::Subs;
         s_split = split(s, "+");
@@ -143,27 +161,27 @@ public:
         }
         s_split.clear();
 
-        // s = mqttactic::ClientID;
+        // s = mqttactic::Session;
         // s_split = split(s, "+");
-        // for (vector<string>::iterator it = s_split.begin(); it != s_split.end();
-        // ++it)
+        // for (vector<string>::iterator it = s_split.begin(); it != s_split.end(); ++it)
         // {
-        //     mqttactic::KeyVariable *kv = new mqttactic::KeyVariable();
+        //     mqttactic::KeyVariable* kv = new mqttactic::KeyVariable();
         //     kv->name = *it;
-        //     kv->varType = "ClientID";
+        //     kv->varType = "Session";
         //     this->key_variables.push_back(kv);
         // }
         // s_split.clear();
 
-        // s = mqttactic::MsgID;
-        // s_split = split(s, "+");
-        // for (vector<string>::iterator it = s_split.begin(); it != s_split.end();
-        //     ++it) {
-        //     mqttactic::KeyVariable* kv = new mqttactic::KeyVariable();
-        //     kv->name = *it;
-        //     kv->varType = "MsgID";
-        //     this->key_variables.push_back(kv);
-        // }
+        s = mqttactic::Msg;
+        s_split = split(s, "+");
+        for (vector<string>::iterator it = s_split.begin(); it != s_split.end(); ++it)
+        {
+            mqttactic::KeyVariable* kv = new mqttactic::KeyVariable();
+            kv->name = *it;
+            kv->varType = "Msg";
+            this->key_variables.push_back(kv);
+        }
+        s_split.clear();
 
         // s = mqttactic::Permission;
         // s_split = split(s, "+");
@@ -175,6 +193,22 @@ public:
         //     kv->varType = "Permission";
         //     this->key_variables.push_back(kv);
         // }
+
+
+        // s = "key_var";
+        // s_split = split(s, "+");
+        // for (vector<string>::iterator it = s_split.begin(); it != s_split.end(); ++it)
+        // {
+        //     mqttactic::KeyVariable* kv = new mqttactic::KeyVariable();
+        //     kv->name = *it;
+        //     kv->varType = "TEST";
+        //     // check if the kv->name is an empty string
+        //     if (kv->name != "")
+        //     {
+        //         this->key_variables.push_back(kv);
+        //     }
+        // }
+        // s_split.clear();
 
         // ------------------------------------------ initiate
         // SemanticKeyBasicBlocks
@@ -214,6 +248,8 @@ public:
     llvm::GlobalVariable* GetStaticDbgInfo(Module& M, DIDerivedType* static_var);
     void                  SearchKeyVar(Module& M, Function& F);
     bool                  ParseVariables(Value* V, Module& M, const Function& F, std::string key_var);
+    Type*                 ParseType(std::string type_name);
+    void                  DFS(Value* node, std::set<Value*>& result);
 };
 }  // namespace mqttactic
 

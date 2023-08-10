@@ -3,7 +3,7 @@ import re
 import shutil
 import sys
 from copy import deepcopy
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #c.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #存放c.py所在的绝对路径
 
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
@@ -50,7 +50,7 @@ paths = {}
 pathTypes = {}
 
 
-# ，(pathTypes)，keyBBs(paths)
+# 读取函数类型文件中，所有路径类型(pathTypes)，以及所有keyBBs之间的路径(paths)
 def readPaths(func):
     global keyBBs, keyOps, keyFuncs, paths, pathTypes
     pathTypes[func] = []
@@ -109,7 +109,7 @@ def getFullPathTypes(keyBBPath, results):
     for bb in keyBBPath:
         for r in results:
             r.append(bb)
-        # bb
+        # 在bb中存在关键函数调用
         if (bb in keyBBs.keys()):
             for call in keyBBs[bb]:
                 inMainPath = False
@@ -157,7 +157,7 @@ for h in handlers:
 
     if not os.path.exists(DIR + h + ".output"):
         continue
-    # keyBBs，keyFuncs
+    # 读取keyBBs与其调用关系，以及keyFuncs
     with open(DIR + h + ".output", encoding="utf-8") as f:
         readStr = f.readline()
         keyBB = ''

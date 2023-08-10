@@ -93,7 +93,7 @@ fn main() {
     let bcDir = String::from(&args[5]);
 
     // handle__publish:/home/szx/Documents/Experiments/llvm-pass/HelloWorld/OUTPUT/PATHS/handle__publish/Type-6
-    // keyBBs，keyFuncs
+    // 读取keyBBs，keyFuncs
     let mut fileName = String::from(funcName);
     fileName += &String::from(":");
     fileName += &dir.clone();
@@ -105,14 +105,14 @@ fn main() {
     let mut f = fileName;
     let mutProject = get_project(bcDir.clone());
 
-    // ExecutionManager
+    // 获取ExecutionManager
     let project = get_project(bcDir.clone());
     let mut x: ExecutionManager<haybale::backend::DefaultBackend> =
         symex_function2(f, &project, config_f, None).unwrap();
-    // mut state
+    // 得到一个mut state
     let mut mutState = x.mut_state();
 
-    // // struct size
+    // // 获取struct size
     // let mut struct_mosquitto_size = get_struct_size_bit(&mutProject, mutState, "struct.mosquitto");
     // let mut struct_mosquitto__packet_size =
     //     get_struct_size_bit(&mutProject, mutState, "struct.mosquitto__packet");
