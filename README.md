@@ -12,10 +12,10 @@ We provide the detailed technical guidance and examples for LLVM IR generation o
 
 *   LLVM
 
-    The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 for experiments
+    The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 currently.
 
 ```
-$ sudo apt install build-essential cmake ninja-build
+$ sudo apt install gcc-10 g++-10 python3 python3-distutils zlib1g-dev unzip cmake  nodejs ninja-build unzip
 ```
 
 1.  RELEASE version
@@ -114,6 +114,7 @@ $ ./configure.sh --shared && cd build && make && make install
 
 #### 2. Usage
 * Configuration
+
 	A simple example can be found in `Include/`.
 * CFG analysis
 ```
