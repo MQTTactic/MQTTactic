@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import json
 import pathTypes
 from termcolor import *
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #存放c.py所在的绝对路径
@@ -9,8 +10,10 @@ sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
 
 path_types = pathTypes.pathTypes
+with open("./pathTypes.json", 'w') as f:
+    f.write(json.dumps(path_types))
 broker_config = {
-    "acl_check_pattern": config["acl_check_pattern"],
+    "acl_check_pattern": "",
     "authorization_pub": config["authorization_pub"],
     "authorization_sub": config["authorization_sub"],
     "authorization_read": config["authorization_read"],
@@ -29,8 +32,21 @@ broker_config = {
     "deliver": "deliver-----",
     "sub_add": "sub_add-----",
     "sub_remove": "sub_remove-----",
-    "acl_revoke": "acl_revoke-----",
+    "acl_revoke": "acl_revoke",
 }
+
+broker_config["acl_check_pattern"] = "("
+if (config["authorization_pub"] != ""):
+    broker_config["acl_check_pattern"] += config["authorization_pub"]
+if (config["authorization_sub"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_sub"]
+if (config["authorization_read"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_read"]
+if (config["authorization_store"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_store"]
+if (config["authorization_load"] != ""):
+    broker_config["acl_check_pattern"] += "|" + config["authorization_load"]
+broker_config["acl_check_pattern"] += ")"
 
 
 class Model:
@@ -182,6 +198,7 @@ class Model:
                 do
                     :: i < MAXMESSAGES ->
                         Sessions[Clients[index].clientId].messages[i].topic = -1;
+                        Sessions[Clients[index].clientId].messages[i].mid = -1;
                         Sessions[Clients[index].clientId].messages[i].QoS = -1;
                         Sessions[Clients[index].clientId].messages[i].srcClientId = -1;
                         Sessions[Clients[index].clientId].messages[i].srcClientIndex = -1;
@@ -222,13 +239,17 @@ class Model:
         if (self.broker_name == "mosquitto" or self.broker_name == "volantmq" or self.broker_name == "FlashMQ" or self.broker_name == "emitter"):
             code = f'''        if
             :: Sessions[Clients[index].clientId].messagesLen < MAXMESSAGES ->
+                lastMessage = Sessions[localClientId].messagesLen;
                 printf("QoS2 message from queue to inflight!\\n");
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].topic = t;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].QoS = 2;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].srcClientId = Clients[index].clientId;
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].srcClientIndex = {client};
-                Sessions[Clients[index].clientId].messages[Sessions[Clients[index].clientId].messagesLen].origin = 1;
+                Sessions[Clients[index].clientId].messages[lastMessage].topic = t;
+                Sessions[Clients[index].clientId].messages[lastMessage].mid = GlobalMid;
+                GlobalMid = GlobalMid + 1;
+                Sessions[Clients[index].clientId].messages[lastMessage].QoS = 2;
+                Sessions[Clients[index].clientId].messages[lastMessage].srcClientId = Clients[index].clientId;
+                Sessions[Clients[index].clientId].messages[lastMessage].srcClientIndex = {client};
+                Sessions[Clients[index].clientId].messages[lastMessage].origin = 1;
                 Sessions[Clients[index].clientId].messagesLen = Sessions[Clients[index].clientId].messagesLen + 1;
+                printf("Message_%d: Extra QoS2 message created!\\n", Sessions[Clients[index].clientId].messages[lastMessage].mid);
             :: else -> skip;
         fi;'''
             return (code, label)
@@ -1112,8 +1133,8 @@ class Model:
 
     def CompleteAclRevoke(self):
         ACL_revoke = []
-        if ('handle__ACL_revoke' in path_types.keys()):
-            for path in path_types['handle__ACL_revoke']:
+        if ('handle__revoke' in path_types.keys()):
+            for path in path_types['handle__revoke']:
                 type = ''
                 insert = []
                 # 标识撤销权限的变量是否有效
@@ -1172,7 +1193,7 @@ class Model:
                     else:
                         self.output.write('skip;\n')
                     line = self.source_code_funcs[h][1]
-            if ('inline Deliver(message, subscriber)' in code):
+            if ('inline Deliver(msg, subscriber)' in code):
                 for h in self.paths:
                     for func in self.paths[h]:
                         func_content = f'inline {func[1]}({self.param[h]})' + '{\n atomic{\n'
@@ -1189,4 +1210,3 @@ class Model:
 if __name__ == "__main__":
     model = Model('FlashMQ', 'BaseModel/BaseModel.pml', 'ConcreteModel/ConcreteModel.pml')
     model.CompleteModel()
-

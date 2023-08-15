@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))  #存放c.py所在的绝�
 sys.path.append(BASE_DIR + "/../")
 from Include.CONFIG import config
 
-handlers = {"handle__publish": ('qos0', 'qos1', 'qos2', 'qos0_retained'), "handle__pubrel": (), "handle__subscribe": (), "handle__connect": ('cleanStartT', 'cleanStartF'), "handle__disconnect": (), "handle__unsubscribe": (), "handle__ACL_revoke": ()}
+handlers = {"handle__publish": ('qos0', 'qos1', 'qos2', 'qos0_retained'), "handle__pubrel": (), "handle__subscribe": (), "handle__connect": ('cleanStartT', 'cleanStartF'), "handle__disconnect": (), "handle__unsubscribe": (), "handle__revoke": ()}
 
 mosquitto_config = {
     "handle__publish": config["handle__publish"],
@@ -19,7 +19,7 @@ mosquitto_config = {
     "handle__unsubscribe": config["handle__unsubscribe"],
     "handle__connect": config["handle__connect"],
     "handle__disconnect": config["handle__disconnect"],
-    "handle__ACL_revoke": config["handle__ACL_revoke"]
+    "handle__revoke": config["handle__revoke"]
 }
 
 output = open("./pathTypes.py", 'w')
@@ -29,6 +29,8 @@ for h in handlers:
     pathTypes = {}
     pathIdx = {}
 
+    if not os.path.exists(f"./SymbolicExecutionResults/{h}.type"):
+        continue
     with open(f"./SymbolicExecutionResults/{h}.type") as f:
         read_str = f.readline()
         type_idx = 0
@@ -73,7 +75,7 @@ for h in handlers:
                                 idx.append(i)
                 if (idx != []):
                     x = ty.replace('Type-', f"Type-{','.join(idx)}")
-                    output.write(f'({x}),')
+                    output.write(f'({x},),')
             output.write("],")
     else:
         key = h
