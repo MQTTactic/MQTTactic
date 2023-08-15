@@ -119,17 +119,17 @@ $ make SCA
 
 * Symbolic Execution
 ```
-$ cd SymbolicExecution/ && cargo build
+$ cd src/SymbolicExecution/ && cargo build
 $ cp target/debug/SE ../../../CFGPass/bin
-$ ./SE "handle__pubrel" "{config_handle__pubrel}" "{type_num}" "{LLVM_bitcode_dir}" > ModelCheck/SymbolicExecutionResults/handle__pubrel/Type-{type_num}.log 2>&1
+$ cd ../ && python3 runSE.py
 ```
 
 * Model Check
 ```
-spin -a ConcreteModel.pml
-mkdir build
-gcc -DMEMLIM=16384 -DVECTORSZ=4096 -O2 -DXUSAFE -DSAFETY -DNOCLAIM -DBITSTATE -w -o pan ../pan.c
-./pan -m40000 -E -c0 -e -n  > result.txt
+$ cd src/ModelCheck
+$ python3 parseTypes.py
+$ python3 autoModel.py
+$ bash ModelChecker.sh
 ```
 
 
