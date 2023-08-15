@@ -1,0 +1,11 @@
+********************************Type-0********************************
+_ZN10MqttPacket16handleDisconnectEv:%1 --> _ZN10MqttPacket16handleDisconnectEv:%25
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%2 --> _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:RETURN
+_ZN10MqttPacket16handleDisconnectEv:%25 --> _ZN10MqttPacket16handleDisconnectEv:RETURN
+('Type-0', )
+********************************Type-1********************************
+_ZN10MqttPacket16handleDisconnectEv:%1 --> _ZN10MqttPacket16handleDisconnectEv:%25
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%2 --> _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%30
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%30 --> _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:RETURN
+_ZN10MqttPacket16handleDisconnectEv:%25 --> _ZN10MqttPacket16handleDisconnectEv:RETURN
+('Type-1', 'deliver_to_subscribers-----this->removeQueuedClients();',)

@@ -1,0 +1,84 @@
+DEBUG: _ZN10MqttPacket16handleDisconnectEv:Number(1)
+DEBUG: _ZN10MqttPacket16handleDisconnectEv:Number(17)
+DEBUG: _ZN10MqttPacket16handleDisconnectEv:Number(24)
+DEBUG: _ZN10MqttPacket16handleDisconnectEv:Number(25)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(2)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(25)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(30)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(42)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(43)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(45)
+DEBUG: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:Number(71)
+DEBUG: _ZN10MqttPacket16handleDisconnectEv:Number(41)
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 0, col 0
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 67
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 75
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 82
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 513, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 514, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 514, col 33
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 514, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 514, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 515, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 515, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 516, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 516, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 49
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 30
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 0, col 0
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 186, col 68
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 188, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 188, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 191, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 191, col 37
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 191, col 44
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 191, col 37
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 192, col 24
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 192, col 49
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 192, col 22
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 193, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 193, col 45
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 193, col 34
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 193, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 194, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 196, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 198, col 15
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 199, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 199, col 14
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 199, col 28
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 199, col 62
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 199, col 18
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 200, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 200, col 37
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 200, col 53
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 200, col 37
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 201, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 201, col 30
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 201, col 19
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 201, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 203, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 204, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/threaddata.cpp, line 205, col 1
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 517, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 518, col 1
+
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket16handleDisconnectEv, bb %1, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket16handleDisconnectEv, bb %17, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket16handleDisconnectEv, bb %24, starting at terminator}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket16handleDisconnectEv, bb %25, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %2, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %25, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %30, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %42, starting at terminator}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %43, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %45, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, bb %71, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket16handleDisconnectEv, bb %41, starting at instr 0}
+
+OK
+

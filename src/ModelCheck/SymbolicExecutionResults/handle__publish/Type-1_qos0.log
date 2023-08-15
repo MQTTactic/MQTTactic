@@ -1,0 +1,115 @@
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(1)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(64)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(109)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(115)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(139)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(147)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(177)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(184)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(315)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(415)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(417)
+DEBUG: _ZN10MqttPacket13handlePublishEv:Number(420)
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 0, col 0
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 626, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 626, col 14
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 626, col 39
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 626, col 14
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 628, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 628, col 32
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 628, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 20
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 31
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 19
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 631, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 19
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 30
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 18
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 17
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 16
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 632, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 17
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 28
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 42
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 16
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 633, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 634, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 635, col 12
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 637, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 637, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 637, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 639, col 17
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 639, col 11
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 639, col 15
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 641, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 641, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 641, col 18
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 641, col 21
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 641, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 35
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 25
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 60
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 11
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 644, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 645, col 16
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 645, col 23
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 645, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 647, col 22
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 647, col 10
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 647, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 657, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 657, col 13
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 657, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 657, col 30
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 657, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 659, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 693, col 18
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 693, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 693, col 16
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 694, col 20
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 694, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 694, col 18
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 696, col 5
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 696, col 21
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 696, col 39
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 696, col 21
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 33
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 41
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 56
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 64
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 79
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 86
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 115
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 120
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 24
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 128
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 697, col 9
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 713, col 1
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 713, col 1
+  /home/szx/Documents/SourceCode/FlashMQ-0.9.9/FlashMQ/mqttpacket.cpp, line 713, col 1
+
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %1, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %64, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %109, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %115, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %139, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %147, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %177, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %184, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %315, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %415, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %417, starting at instr 0}
+  {/home/szx/Documents/Experiments/FlashMQ/CFGPass//complete.bc: _ZN10MqttPacket13handlePublishEv, bb %420, starting at terminator}
+
+OK
+

@@ -1,0 +1,17 @@
+********************************Type-0********************************
+_ZN10MqttPacket17handleUnsubscribeEv:%1 --> _ZN10MqttPacket17handleUnsubscribeEv:%213
+_ZN10MqttPacket17handleUnsubscribeEv:%213 --> _ZN10MqttPacket17handleUnsubscribeEv:RETURN
+('Type-0', 'send__unsuback-----UnsubAckunsubAck(packet_id);','deliver-----sender->writeMqttPacket(response);',)
+********************************Type-1********************************
+_ZN10MqttPacket17handleUnsubscribeEv:%1 --> _ZN10MqttPacket17handleUnsubscribeEv:%146
+_ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:%3 --> _ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:RETURN
+_ZN10MqttPacket17handleUnsubscribeEv:%146 --> _ZN10MqttPacket17handleUnsubscribeEv:%213
+_ZN10MqttPacket17handleUnsubscribeEv:%213 --> _ZN10MqttPacket17handleUnsubscribeEv:RETURN
+('Type-1', 'send__unsuback-----UnsubAckunsubAck(packet_id);','deliver-----sender->writeMqttPacket(response);',)
+********************************Type-2********************************
+_ZN10MqttPacket17handleUnsubscribeEv:%1 --> _ZN10MqttPacket17handleUnsubscribeEv:%146
+_ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:%3 --> _ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:%145
+_ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:%145 --> _ZN17SubscriptionStore18removeSubscriptionERSt10shared_ptrI6ClientERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE:RETURN
+_ZN10MqttPacket17handleUnsubscribeEv:%146 --> _ZN10MqttPacket17handleUnsubscribeEv:%213
+_ZN10MqttPacket17handleUnsubscribeEv:%213 --> _ZN10MqttPacket17handleUnsubscribeEv:RETURN
+('Type-2', 'sub_remove-----deepestNode->removeSubscriber(ses);','send__unsuback-----UnsubAckunsubAck(packet_id);','deliver-----sender->writeMqttPacket(response);',)

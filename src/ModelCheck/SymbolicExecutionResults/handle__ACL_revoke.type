@@ -1,0 +1,4 @@
+********************************Type-0********************************
+dynsec_roles__process_remove_acl:%4 --> dynsec_roles__process_remove_acl:%367
+dynsec_roles__process_remove_acl:%367 --> dynsec_roles__process_remove_acl:RETURN
+('Type-0', 'acl_revoke',)
