@@ -276,10 +276,42 @@ void VarAnalysis::SearchKeyVar(Module& M, Function& F)
                     // If the operand is exactly a value of a key variable
                     if (ParseVariables(operand, M, F, key_var->name))
                     {
-                        // dbgs() << "Found key variable ---- Instruction: " << I << "\n\n\n\n";
-                        // Find other related value & basicblock with pointer analysis
-                        PointerAnalyzer->TraverseOnVFG(key_var, operand, SemanticKeyBasicBlocks[key_var]);
-                        // dbgs() << "----------------------------------\n\n\n\n";
+                        // For "Msg" variable, we just start from `store xxx, Msg`, because we only need PUBLISH packet,  not other PUBREL, ...
+                        // if (key_var->varType == "Msg" && inst->getOpcode() == Instruction::Store)
+                        // {
+                        //     Set<const llvm::Value*> pts_set;
+                        //     pts_set.insert(pts_set.end(), operand);
+
+
+                        //     const StoreInst* store = static_cast<const StoreInst*>(inst);
+                        //     Value*           RightV = store->getOperand(1);
+                        //     Value*           leftV = store->getOperand(0);
+
+                        //     if (RightV == operand)
+                        //     {
+                        //         if (!llvm::ConstantPointerNull::classof(leftV))
+                        //         {
+                        //             DebugLoc dbl = I.getDebugLoc();
+                        //             if (dbl.get())
+                        //             {
+                        //                 auto* Scope = cast<DIScope>(dbl.getScope());
+                        //                 dbgs() << Scope->getDirectory().str() + "/" + Scope->getFilename().str() << ": " << dbl->getLine() << ":" << dbl->getColumn() << "\n";
+                        //             }
+                        //             dbgs() << "Found key variable ---- Instruction: " << I << "\n\n\n\n";
+                        //             // Find other related value & basicblock with pointer analysis
+                        //             PointerAnalyzer->TraverseOnVFG(key_var, operand, SemanticKeyBasicBlocks[key_var]);
+                        //             // dbgs() << "----------------------------------\n\n\n\n";
+                        //         }
+                        //     }
+                        // }
+                        // [TODO-x]: msg
+                        if (key_var->varType == "Msg")
+                        {
+                        }
+                        else
+                        {
+                            PointerAnalyzer->TraverseOnVFG(key_var, operand, SemanticKeyBasicBlocks[key_var]);
+                        }
                     }
                 }
 

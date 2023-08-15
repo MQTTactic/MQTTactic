@@ -102,6 +102,8 @@ public:
     std::map<BasicBlock*, long> completeBBs;
     // when traverse CFG, we store {BB, (to ret)KBB paths}
     std::map<BasicBlock*, std::map<std::string, PathType>> completeBBs_kpath;
+    // Function related to handler
+    std::set<Function*> HFuncs;
 
     std::map<Function*, std::map<std::string, SemanticPathType*>> completeFunc_kpath;
     // 已完成遍历的BB之间的边
@@ -129,12 +131,13 @@ public:
     void printFuncSliceGraph(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticABB*> path);
     /* Use PathGraph to combine all possible Handler PATHTYPES combinations
      */
-    void combinePathTypes(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticPathType> path, std::map<Function*, int> loopStatus, std::vector<BasicBlock*> contextPath);
-
+    void combinePathTypes(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticPathType> path, std::map<Function*, int> loopStatus, std::vector<BasicBlock*> contextPath, std::vector<Function*> callContext);
     // use the context of KBB to filter the Anchor BBs
     bool isFakeAnchorBB(BasicBlock* bb, std::vector<BasicBlock*> contextPath);
     // 清空所有ALLFunctions中的second
     bool clearALLFunctions();
+
+    void getAllRelatedFuncs(Module& M, Function& F);
 
     // 获取BB的label
     std::string getBBLabel(const BasicBlock* Node);
@@ -143,8 +146,8 @@ public:
 
     // 递归遍历函数所有指令，直到找到endBB，返回可能经过的所有keyBBs
     bool traverseFuncToEnd(Module& M, Function& F, BasicBlock* end, bool foundEnd, std::vector<keyBBPath> path, std::vector<std::vector<keyBBPath>>& endPath, std::vector<std::vector<keyBBPath>>& results);
-    // 递归遍历一个函数，从头到return，经过的所有keyBBs(递归进入调用函数)
-    void traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath> path, std::vector<keyBBPath>& result);
+    // 递归遍历一个函数，从头到return
+    void traverseFuncToReturn(Module& M, Function& F, std::map<const llvm::BasicBlock*, mqttactic::SemanticKBB*>& SKBBS);
     void traverseFuncToReturnWithoutCall(Module& M, Function& F, std::vector<keyBBPathWithoutCall>& result);
 
     // 从origin到dest的所有路径，用于计算路径总数
@@ -199,12 +202,12 @@ public:
         {
             cou += var_analyzer->SemanticKeyBasicBlocks[key_var].size();
         }
-        errs() << "[INFO]: Pointer Analysis found " << cou << " Semantic Key Basic Blocks\n";
+        errs() << "[INFO]: Pointer Analysis found " << cou << " Semantic Key Basic Blocks in the entire source code\n";
 
         traverseCallGraph(M, F);
 
+        errs() << "[INFO]: Anchor Basic Blocks in " << F.getName().str() << ": " << AnchorBBs.size() << "\n\n\n\n";
 
-        errs() << "[INFO]: Anchor Basic Blocks: " << AnchorBBs.size() << "\n\n\n\n";
 
         // dbgs() << "\n\n/**********************/\n[DBG]: Semantic AnchorBB: \n/**********************/\n";
         // for (auto sabbit = SemanticAnchorBBs.begin(); sabbit != SemanticAnchorBBs.end(); sabbit++)
@@ -254,31 +257,55 @@ public:
         SemanticPathType               empty_spt;
         std::map<llvm::Function*, int> loopStatus;
         std::vector<BasicBlock*>       contextPath;
+        std::vector<Function*>         callContext;
         spts.push_back(empty_spt);
-        combinePathTypes(M, F, FuncSliceGraphHT[&F]->head, spts, loopStatus, contextPath);
+        combinePathTypes(M, F, FuncSliceGraphHT[&F]->head, spts, loopStatus, contextPath, callContext);
+
 
         dbgs() << "\n\n/**********************/\n[DBG]: PATHTYPES (" << completeFunc_kpath[&F].size() << "): \n/**********************/\n";
         for (auto spt : completeFunc_kpath[&F])
         {
             dbgs() << spt.first << "\n";
-            for (auto _f : spt.second->ptFunc)
-                dbgs() << "->" << _f;
-            dbgs() << "\n";
+            // for (auto _f : spt.second->ptFunc)
+            //     dbgs() << "->" << _f;
+            // dbgs() << "\n";
         }
-
         assert(1 == 2);
+
         return false;
     }
 };
 
 void CFGPass::identifyKeyBasicBlock(Module& M, Function& F)
 {
-    var_analyzer = new mqttactic::VarAnalysis(M);
 
+    var_analyzer = new mqttactic::VarAnalysis(M);
+    int stat = 0;
+
+    // [TODO-x]: msg
+    for (auto key_var : var_analyzer->key_variables)
+    {
+
+        if (key_var->varType == "Msg")
+        {
+            for (Module::iterator mi = M.begin(); mi != M.end(); ++mi)
+            {
+                Function& f = *mi;
+                traverseFuncToReturn(M, f, var_analyzer->SemanticKeyBasicBlocks[key_var]);
+            }
+        }
+    }
+    // getAllRelatedFuncs(M, F);
+    // for (auto f : HFuncs)
+    // {
+    //     var_analyzer->SearchKeyVar(M, *f);
+    // }
     for (Module::iterator mi = M.begin(); mi != M.end(); ++mi)
     {
         Function& f = *mi;
         var_analyzer->SearchKeyVar(M, f);
+        // dbgs() << stat << "/" << M.getFunctionList().size() << "\n";
+        stat++;
     }
 
 
@@ -334,50 +361,50 @@ void CFGPass::identifyKeyBasicBlock(Module& M, Function& F)
     }
 
 
-    errs() << "[INFO]: Identifing the session in operations\n";
-    // Try to get the context of `DELIVER` operation backwardly, consist of the `Session` variables
-    std::map<llvm::Value*, std::vector<Function*>> sess_contexts;
-    for (auto key_var : var_analyzer->key_variables)
-    {
-        if (key_var->varType == "Msg" && var_analyzer->SemanticKeyBasicBlocks[key_var].size() > 0)
-        {
-            for (auto sbb : var_analyzer->SemanticKeyBasicBlocks[key_var])
-            {
-                sess_contexts.clear();
-                sbb.second->contexts.clear();
-                for (auto inst : sbb.second->semantic_inst)
-                {
-                    Use* operand_list = inst.first->getOperandList();
-                    for (int i = 0; i < inst.first->getNumOperands(); i++)
-                    {
-                        if (var_analyzer->all_sess.find(operand_list[i]) != var_analyzer->all_sess.end())
-                        {
-                            dbgs() << *(inst.first) << "\n";
-                            var_analyzer->PointerAnalyzer->FindSessionContext(operand_list[i], var_analyzer->sess_type, sess_contexts);
-                            // [TODO]: 可以只分析deliver第一个参数吗, 一般第一个destination (socket)
-                            break;
-                        }
-                    }
-                }
-                for (auto ctx : sess_contexts)
-                {
-                    if (var_analyzer->SESSIONS[var_analyzer->Handler_session].find(ctx.first) != var_analyzer->SESSIONS[var_analyzer->Handler_session].end())
-                    {
-                        std::string str;
-                        for (auto t : ctx.second)
-                        {
-                            str += "->" + t->getName().str();
-                        }
-                        if (sbb.second->call_contexts.find(str) == sbb.second->call_contexts.end())
-                        {
-                            sbb.second->call_contexts.insert(std::map<std::string, std::vector<llvm::Function*>>::value_type(str, ctx.second));
-                            // dbgs() << str << "\n";
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // errs() << "[INFO]: Identifing the session in operations\n";
+    // // Try to get the context of `DELIVER` operation backwardly, consist of the `Session` variables
+    // std::map<llvm::Value*, std::vector<Function*>> sess_contexts;
+    // for (auto key_var : var_analyzer->key_variables)
+    // {
+    //     if (key_var->varType == "Msg" && var_analyzer->SemanticKeyBasicBlocks[key_var].size() > 0)
+    //     {
+    //         for (auto sbb : var_analyzer->SemanticKeyBasicBlocks[key_var])
+    //         {
+    //             sess_contexts.clear();
+    //             sbb.second->contexts.clear();
+    //             for (auto inst : sbb.second->semantic_inst)
+    //             {
+    //                 Use* operand_list = inst.first->getOperandList();
+    //                 for (int i = 0; i < inst.first->getNumOperands(); i++)
+    //                 {
+    //                     if (var_analyzer->all_sess.find(operand_list[i]) != var_analyzer->all_sess.end())
+    //                     {
+    //                         dbgs() << *(inst.first) << "\n";
+    //                         var_analyzer->PointerAnalyzer->FindSessionContext(operand_list[i], var_analyzer->sess_type, sess_contexts);
+    //                         // [TODO]: 可以只分析deliver第一个参数吗, 一般第一个destination (socket)
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //             for (auto ctx : sess_contexts)
+    //             {
+    //                 if (var_analyzer->SESSIONS[var_analyzer->Handler_session].find(ctx.first) != var_analyzer->SESSIONS[var_analyzer->Handler_session].end())
+    //                 {
+    //                     std::string str;
+    //                     for (auto t : ctx.second)
+    //                     {
+    //                         str += "->" + t->getName().str();
+    //                     }
+    //                     if (sbb.second->call_contexts.find(str) == sbb.second->call_contexts.end())
+    //                     {
+    //                         sbb.second->call_contexts.insert(std::map<std::string, std::vector<llvm::Function*>>::value_type(str, ctx.second));
+    //                         // dbgs() << str << "\n";
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
 
     dbgs() << "{\n";
@@ -624,6 +651,7 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
 
     for (BasicBlock& BB : F)
     {
+        const BasicBlock* bbp = &BB;
         for (auto key_var : var_analyzer->key_variables)
         {
             if (var_analyzer->SemanticKeyBasicBlocks[key_var].find(&BB) != var_analyzer->SemanticKeyBasicBlocks[key_var].end())
@@ -641,28 +669,34 @@ int CFGPass::traverseCallGraph(Module& M, Function& F)
                     std::string semantic = BB.getParent()->getName().str() + "===";
                     switch (siit->second)
                     {
-                    case mqttactic::READ:
+                    case mqttactic::READ: {
                         semantic += key_var->varType + "_read";
                         break;
-                    case mqttactic::WRITE:
+                    }
+                    case mqttactic::WRITE: {
                         semantic += key_var->varType + "_write";
                         break;
-                    case mqttactic::WRITE0:
+                    }
+                    case mqttactic::WRITE0: {
                         semantic += key_var->varType + "_remove";
                         break;
-                    case mqttactic::WRITE1:
+                    }
+                    case mqttactic::WRITE1: {
                         semantic += key_var->varType + "_add";
                         break;
-                    case mqttactic::DELIVER:
+                    }
+                    case mqttactic::DELIVER: {
                         semantic += "DELIVER";
                         break;
-                    default:
+                    }
+                    default: {
                         errs() << "[ERROR]: Cannot parse semantic of: " << *(siit->first) << "\n";
                         break;
                     }
+                    }
+
                     SemanticAnchorBBs[&BB]->semanticInsts.insert(std::map<llvm::Instruction*, std::string>::value_type(siit->first, semantic));
                 }
-
                 retval = 2;
                 return retval;
             }
@@ -884,7 +918,7 @@ void CFGPass::constructPathGraph(std::map<llvm::Function*, std::vector<PathType>
     }
 }
 
-void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticPathType> paths, std::map<Function*, int> loopStatus, std::vector<BasicBlock*> contextPath)
+void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std::vector<SemanticPathType> paths, std::map<Function*, int> loopStatus, std::vector<BasicBlock*> contextPath, std::vector<Function*> callContext)
 {
     std::string func = origin->bb->getParent()->getName().str();
     for (auto& p : paths)
@@ -893,6 +927,10 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
         {
             p.ptFunc.push_back(func);
         }
+    }
+    if (origin->isVirtualHead)
+    {
+        callContext.push_back(origin->bb->getParent());
     }
 
     if (origin->callSite == nullptr && origin->isVirtualHead == false && origin->isVirtualTail == false)
@@ -933,7 +971,7 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
                 std::vector<SemanticPathType> calledFuncPaths;
                 SemanticPathType              empty_spt;
                 calledFuncPaths.push_back(empty_spt);
-                combinePathTypes(M, *calledFunc, FuncSliceGraphHT[calledFunc]->head, calledFuncPaths, loopStatus, contextPath);
+                combinePathTypes(M, *calledFunc, FuncSliceGraphHT[calledFunc]->head, calledFuncPaths, loopStatus, contextPath, callContext);
             }
             std::vector<SemanticPathType> paths_tmp(paths);
             paths.clear();
@@ -989,6 +1027,7 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
                 completeFunc_kpath[&F].insert(std::map<std::string, CFGPass::SemanticPathType*>::value_type(p.ptSemantic, new SemanticPathType(p)));
             }
         }
+        callContext.pop_back();
     }
 
 
@@ -997,7 +1036,7 @@ void CFGPass::combinePathTypes(Module& M, Function& F, SemanticABB* origin, std:
         if (succ.second != true)
             continue;
 
-        combinePathTypes(M, F, succ.first, paths, loopStatus, contextPath);
+        combinePathTypes(M, F, succ.first, paths, loopStatus, contextPath, callContext);
     }
 }
 
@@ -1049,15 +1088,44 @@ bool CFGPass::isFakeAnchorBB(BasicBlock* bb, std::vector<BasicBlock*> contextPat
     {
         if (var_analyzer->SemanticKeyBasicBlocks[key_var].find(bb) != var_analyzer->SemanticKeyBasicBlocks[key_var].end())
         {
-            // [TODO]: Msg Session变量暂时不分析
-            if (key_var->varType == "Msg" || key_var->varType == "Session")
+            // // [TODO-x]: 更新Msg的context过滤
+            // if (key_var->varType == "Msg")
+            // {
+            //     return false;
+            // }
+            if (key_var->varType == "Msg")
             {
                 return false;
+                // bool flag = true;
+                // dbgs() << "callcontext :";
+                // for (auto f : callContext)
+                // {
+                //     dbgs() << f->getName().str() << "->";
+                // }
+                // dbgs() << "\n";
+                // for (auto ctxs : var_analyzer->SemanticKeyBasicBlocks[key_var][bb]->contexts)
+                // {
+
+                //     std::set<const llvm::Function*> funcs;
+                //     for (auto bb : ctxs)
+                //     {
+                //         funcs.insert(bb->getParent());
+                //     }
+                //     for (auto f : callContext)
+                //     {
+                //         if (funcs.find(f) == funcs.end())
+                //             continue;
+                //     }
+                //     flag = false;
+                //     break;
+                // }
+                // return flag;
             }
             contexts.insert(contexts.end(), var_analyzer->SemanticKeyBasicBlocks[key_var][bb]->contexts.begin(), var_analyzer->SemanticKeyBasicBlocks[key_var][bb]->contexts.end());
         }
     }
 
+    // 如果当前的真实contextPath不包含ctx[0](每一个KBB保存多个context, 只有满足这些context, 才是KBB), 认为是fake的
     for (auto ctx : contexts)
     {
         if (ctx.size() == 0)
@@ -1089,6 +1157,103 @@ bool CFGPass::clearALLFunctions()
     }
     return true;
 }
+
+
+void CFGPass::getAllRelatedFuncs(Module& M, Function& F)
+{
+    std::set<Instruction*>           insts;
+    std::set<Instruction*>::iterator it;
+    int                              retval = 1;
+
+    HFuncs.insert(&F);
+    for (BasicBlock& BB : F)
+    {
+        for (Instruction& I : BB)
+        {
+            insts.insert(&I);
+        }
+    }
+    for (it = insts.begin(); it != insts.end(); it++)
+    {
+        llvm::Instruction* inst = *it;
+        unsigned int       opcode = inst->getOpcode();
+
+        switch (opcode)
+        {
+        case Instruction::Call: {
+            CallInst*                              call = static_cast<CallInst*>(inst);
+            std::string                            calledFuncName = "";
+            int                                    rt;
+            bool                                   isKeyFunc = false;
+            std::map<std::string, short>::iterator Fit;
+
+            if (call->isIndirectCall() || call->getCalledFunction() == NULL)
+            {
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
+            }
+            else
+            {
+                calledFuncName = call->getCalledFunction()->getName().str();
+            }
+            Fit = ALLFunctions.find(calledFuncName);
+            Function& calledFunc = *M.getFunction(calledFuncName);
+
+            // 禁止进入系统函数(只关注broker中声明的函数)
+            if (Fit != ALLFunctions.end() && calledFuncName != "log__printf" && HFuncs.find(&calledFunc) == HFuncs.end())
+            {
+                getAllRelatedFuncs(M, calledFunc);
+            }
+
+            break;
+        }
+        case Instruction::Invoke: {
+            InvokeInst*                            call = static_cast<InvokeInst*>(inst);
+            std::string                            calledFuncName = "";
+            int                                    rt;
+            bool                                   isKeyFunc = false;
+            std::map<std::string, short>::iterator Fit;
+            if (call->isIndirectCall() || call->getCalledFunction() == NULL)
+            {
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                    calledFuncName = ptrFunc->getName().str();
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
+            }
+            else
+            {
+                calledFuncName = call->getCalledFunction()->getName().str();
+            }
+
+            Fit = ALLFunctions.find(calledFuncName);
+            Function& calledFunc = *M.getFunction(calledFuncName);
+            // 禁止进入系统函数(只关注broker中声明的函数)
+            if (Fit != ALLFunctions.end() && calledFuncName != "log__printf" && HFuncs.find(&calledFunc) == HFuncs.end())
+            {
+                getAllRelatedFuncs(M, calledFunc);
+            }
+
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+}
+
 
 std::string CFGPass::getBBLabel(const BasicBlock* Node)
 {
@@ -1300,16 +1465,13 @@ bool CFGPass::traverseFuncToEnd(Module& M, Function& F, BasicBlock* end, bool fo
     return found_end;
 }
 
-void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath> path, std::vector<keyBBPath>& result)
+void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::map<const llvm::BasicBlock*, mqttactic::SemanticKBB*>& SKBBS)
 {
     for (BasicBlock& BB : F)
     {
         if (AnchorBBs.find(&BB) != AnchorBBs.end())
         {
-            struct keyBBPath k;
-            k.bb = &BB;
-            k.mustBePassed = false;
-            path.push_back(k);
+            continue;
         }
         for (Instruction& I : BB)
         {
@@ -1335,14 +1497,18 @@ void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath
                 {
                     calledFuncName = call->getCalledFunction()->getName().str();
                 }
-                if (keyFuncs.find(calledFuncName) != keyFuncs.end() && AnchorBBs.find(&BB) != AnchorBBs.end())
+                if (calledFuncName.find("send__real_publish") != std::string::npos && AnchorBBs.find(&BB) != AnchorBBs.end())
                 {
-                    std::vector<keyBBPath> r;
-                    std::vector<keyBBPath> p;
-                    traverseFuncToReturn(M, *(call->getCalledFunction()), p, r);
-                    for (std::vector<keyBBPath>::iterator it = r.begin(); it != r.end(); it++)
+                    AnchorBBs.insert(&BB);
+                    if (SKBBS.find(&BB) == SKBBS.end())
                     {
-                        path.push_back(*it);
+                        mqttactic::SemanticKBB* sbb = new mqttactic::SemanticKBB();
+                        sbb->bb = &BB;
+                        sbb->values.push_back(inst);
+                        sbb->semantics = mqttactic::DELIVER;
+                        sbb->semantic_inst.insert(std::map<llvm::Instruction*, int>::value_type(const_cast<llvm::Instruction*>(inst), mqttactic::DELIVER));
+
+                        SKBBS.insert(std::pair<const llvm::BasicBlock*, mqttactic::SemanticKBB*>(&BB, sbb));
                     }
                 }
                 break;
@@ -1365,32 +1531,21 @@ void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath
                 {
                     calledFuncName = call->getCalledFunction()->getName().str();
                 }
-                if (keyFuncs.find(calledFuncName) != keyFuncs.end() && AnchorBBs.find(&BB) != AnchorBBs.end())
+                if (calledFuncName.find("send__real_publish") != std::string::npos && AnchorBBs.find(&BB) != AnchorBBs.end())
                 {
-                    std::vector<keyBBPath> r;
-                    std::vector<keyBBPath> p;
-                    traverseFuncToReturn(M, *(call->getCalledFunction()), p, r);
-                    for (std::vector<keyBBPath>::iterator it = r.begin(); it != r.end(); it++)
+                    AnchorBBs.insert(&BB);
+                    if (SKBBS.find(&BB) == SKBBS.end())
                     {
-                        path.push_back(*it);
+                        mqttactic::SemanticKBB* sbb = new mqttactic::SemanticKBB();
+                        sbb->bb = &BB;
+                        sbb->values.push_back(inst);
+                        sbb->semantics = mqttactic::DELIVER;
+                        sbb->semantic_inst.insert(std::map<llvm::Instruction*, int>::value_type(const_cast<llvm::Instruction*>(inst), mqttactic::DELIVER));
+
+                        SKBBS.insert(std::pair<const llvm::BasicBlock*, mqttactic::SemanticKBB*>(&BB, sbb));
                     }
                 }
                 break;
-            }
-            case Instruction::Ret: {
-                // 遇到返回，则插入一个null basicblock，代表返回
-                if (path[path.end() - path.begin() - 1].bb != &BB)
-                {
-                    struct keyBBPath k;
-                    k.bb = nullptr;
-                    k.mustBePassed = false;
-                    path.push_back(k);
-                    for (std::vector<keyBBPath>::iterator it = path.begin(); it != path.end(); it++)
-                    {
-                        result.push_back(*it);
-                    }
-                }
-                return;
             }
             default:
                 break;
@@ -1398,6 +1553,7 @@ void CFGPass::traverseFuncToReturn(Module& M, Function& F, std::vector<keyBBPath
         }
     }
 }
+
 void CFGPass::traverseFuncToReturnWithoutCall(Module& M, Function& F, std::vector<keyBBPathWithoutCall>& result)
 {
     for (BasicBlock& BB : F)

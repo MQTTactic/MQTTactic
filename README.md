@@ -12,7 +12,7 @@ We provide the detailed technical guidance and examples for LLVM IR generation o
 
 *   LLVM
 
-    The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 currently.
+    The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 currently and build the tool with gcc-10/g++-10.
 
 ```
 $ sudo apt install gcc-10 g++-10 python3 python3-distutils zlib1g-dev unzip cmake  nodejs ninja-build

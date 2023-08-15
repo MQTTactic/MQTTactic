@@ -2,6 +2,27 @@
 
 namespace mqttactic
 {
+
+void PTA::GetPtsTo(PAGNode* p_node)
+{
+    SVFIR* pag = this->Ander->getPAG();
+    if (pag->isValidTopLevelPtr(p_node))
+    {
+        const PointsTo& pts = this->Ander->getPts(p_node->getId());
+        if (!pts.empty())
+        {
+            dbgs() << "\t\tPointsTo: { ";
+            for (PointsTo::iterator it = pts.begin(), eit = pts.end(); it != eit; ++it)
+            {
+                NodeID   id = *it;
+                VFGNode* vNode = this->Svfg->getSVFGNode(id);
+                SVFUtil::errs() << *vNode << "\n";
+            }
+            dbgs() << "}\n\n";
+        }
+    }
+}
+
 void PTA::FindSessionSet(llvm::Value* taint_value, std::set<Value*>& sess_set, std::map<Value*, std::map<Value*, bool>>& sess_graph)
 {
     SVFIR*                       pag = this->Ander->getPAG();
@@ -237,11 +258,14 @@ void PTA::FindSessionContext(llvm::Value* taint_value, Type* taint_type, std::ma
 
 void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::map<const llvm::BasicBlock*, mqttactic::SemanticKBB*>& SKBBS)
 {
-    SVFIR*                       pag = this->Ander->getPAG();
-    FIFOWorkList<const VFGNode*> worklist;
+    SVFIR*                      pag = this->Ander->getPAG();
+    std::vector<const VFGNode*> worklist;
     // Contains all the svfg nodes (with context) that are visited
     std::map<const VFGNode*, std::vector<KBBContext>>        svfg_nodes_with_context;
     std::map<const llvm::BasicBlock*, std::set<std::string>> KBB_with_context_str;
+    // 记录所有遍历的vNode以及其后继节点
+    std::map<const VFGNode*, std::set<const VFGNode*>> vNode_succs;
+    std::vector<const VFGNode*>                        vNode_path;
     // Contains all the points-to set of the taint_value
     Set<const Value*> pts_set;
     llvm::Type*       taint_value_type = taint_value->getType();
@@ -261,7 +285,7 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
         // dbgs() << "DefSvfgNode id: " << vNode->getId() << "\n";
         if (vNode->getValue() != nullptr)
         {
-            worklist.push(vNode);
+            worklist.push_back(vNode);
             if (svfg_nodes_with_context.find(vNode) == svfg_nodes_with_context.end())
             {
                 std::vector<KBBContext> kbb_contexts;
@@ -270,27 +294,85 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
             pts_set.insert(vNode->getValue());
             while (!worklist.empty())
             {
-                const VFGNode* vNode = worklist.pop();
+                const VFGNode* vNode = worklist.back();
+                worklist.pop_back();
+
                 for (VFGNode::const_iterator it = vNode->OutEdgeBegin(), eit = vNode->OutEdgeEnd(); it != eit; ++it)
                 {
                     VFGEdge* edge = *it;
                     VFGNode* succNode = edge->getDstNode();
+                    vNode_succs[vNode].insert(succNode);
+                }
+
+                // 如果一个节点所有后继节点都遍历完了
+                if (vNode_path.size() > 0)
+                {
+                    const VFGNode* _last = vNode_path.back();
+                    if (vNode_succs.find(_last) != vNode_succs.end())
+                    {
+                        while (vNode_succs[_last].find(vNode) == vNode_succs[_last].end())
+                        {
+                            vNode_path.pop_back();
+                            _last = vNode_path.back();
+                        }
+                    }
+                }
+                vNode_path.push_back(vNode);
+                // for (auto vv : vNode_path)
+                // {
+                //     dbgs() << vv->getId() << "->";
+                // }
+                // dbgs() << "\n";
+                // for (auto succs : vNode_succs[vNode])
+                // {
+                //     dbgs() << succs->getId() << ",";
+                // }
+                // dbgs() << "\n";
+
+                if (vNode_succs[vNode].size() == 0)
+                    vNode_path.pop_back();
+
+                for (const VFGNode* succNode : vNode_succs[vNode])
+                {
 
                     // Don't propagate to the key_operation function defined in "IdentifyCallFuncOperation"
-                    if (const CallICFGNode* call_inst = dyn_cast<CallICFGNode>(vNode->getICFGNode()))
-                    {
-                        const llvm::Instruction* I = call_inst->getCallSite();
-                        int                      op_type = IdentifyOperationType(I, vNode->getValue(), pts_set);
-                        if (op_type != -1)
-                            break;
-                    }
+                    if (MRSVFGNode::classof(vNode) == false)
+                        if (const CallICFGNode* call_inst = dyn_cast<CallICFGNode>(vNode->getICFGNode()))
+                        {
+                            const llvm::Instruction* I = call_inst->getCallSite();
+                            int                      op_type = IdentifyOperationType(I, vNode->getValue(), pts_set);
+                            if (op_type != -1)
+                                break;
+                        }
 
-                    // MA node
+                    // if (taint_var->varType == "Msg")
+                    // {
+                    //     SVFUtil::errs() << "src: " << *vNode << "\n"
+                    //                     << "dst: " << *succNode << "\n";
+                    // }
+
+
+                    // MR node
                     if (succNode->getValue() == nullptr)
                     {
                         // ignore other memory region node: FPIN/FPOUT/APIN/APOUT/MPhi/MInterPhi
                         if (!(succNode->getNodeKind() == VFGNode::MIntraPhi) || (succNode->getNodeKind() == VFGNode::MIntraPhi && vNode->getNodeKind() == VFGNode::MIntraPhi))
-                            continue;
+                        {
+                            // [TODO]: 会导致重复的KBB太多
+                            if (taint_var->varType == "Msg")
+                            {
+                                if ((succNode->getNodeKind() == VFGNode::FPIN) || (succNode->getNodeKind() == VFGNode::APIN))
+                                {
+                                }
+                                else if ((succNode->getNodeKind() == VFGNode::FPOUT) || (succNode->getNodeKind() == VFGNode::APOUT))
+                                {
+                                }
+                                else
+                                    continue;
+                            }
+                            else
+                                continue;
+                        }
                     }
                     // stmt node/param node
                     else
@@ -302,6 +384,27 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         }
                     }
 
+                    // 保证一个函数被多次调用时，APOUT Node不会继续向别的位置遍历
+                    if (succNode->getNodeKind() == VFGNode::APOUT || succNode->getNodeKind() == VFGNode::ARet)
+                    {
+                        const VFGNode* prev_Aparam = nullptr;
+                        for (auto vnodeit = vNode_path.rbegin(); vnodeit != vNode_path.rend(); ++vnodeit)
+                        {
+                            const VFGNode* vn = *vnodeit;
+                            if (vn && vn->getNodeKind() == VFGNode::AParm)
+                            {
+                                prev_Aparam = vn;
+                                break;
+                            }
+                        }
+                        if (prev_Aparam && succNode->getFun() != prev_Aparam->getFun())
+                            continue;
+                        // [TODO]: 那些没有经过Aparam节点的路径， 不能直接删除
+                        // else if (prev_Aparam == nullptr)
+                        // {
+                        //     continue;
+                        // }
+                    }
 
                     // Add the succNode to the svfg_nodes_with_context
                     if (svfg_nodes_with_context.find(succNode) == svfg_nodes_with_context.end())
@@ -322,21 +425,24 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         }
                         if (vNode->getNodeKind() != VFGNode::Addr)
                         {
-                            const llvm::BasicBlock* bb = vNode->getICFGNode()->getBB();
-                            // context represent the condition of succNode. so if src_bb == dest_bb, we skip the insertion
-                            if (bb != succNode->getICFGNode()->getBB())
-                                for (auto kbb_c = kbb_contexts.begin(); kbb_c != kbb_contexts.end(); kbb_c++)
-                                {
-                                    if (find((*kbb_c).begin(), (*kbb_c).end(), bb) == (*kbb_c).end())
-                                        (*kbb_c).push_back(bb);
-                                }
+                            if (!(vNode->getNodeKind() == VFGNode::FPIN || vNode->getNodeKind() == VFGNode::FPOUT || vNode->getNodeKind() == VFGNode::APIN || vNode->getNodeKind() == VFGNode::APOUT))
+                            {
+                                const llvm::BasicBlock* bb = vNode->getICFGNode()->getBB();
+                                // context represent the condition of succNode. so if src_bb == dest_bb, we skip the insertion
+                                if (bb != succNode->getICFGNode()->getBB())
+                                    for (auto kbb_c = kbb_contexts.begin(); kbb_c != kbb_contexts.end(); kbb_c++)
+                                    {
+                                        if (find((*kbb_c).begin(), (*kbb_c).end(), bb) == (*kbb_c).end())
+                                            (*kbb_c).push_back(bb);
+                                    }
+                            }
                         }
                         else
                         {
                             kbb_contexts.clear();
                         }
                         svfg_nodes_with_context.insert(pair<const VFGNode*, std::vector<KBBContext>>(succNode, kbb_contexts));
-                        worklist.push(succNode);
+                        worklist.push_back(succNode);
                         if (succNode->getValue() && StmtVFGNode::classof(succNode) && pts_set.find(succNode->getValue()) == pts_set.end())
                             pts_set.insert(succNode->getValue());
                     }
@@ -346,6 +452,10 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         if (svfg_nodes_with_context.find(vNode) == svfg_nodes_with_context.end())
                         {
                             llvm::errs() << "[ERROR]: can not find the source svfg node\n";
+                            continue;
+                        }
+                        if (vNode->getNodeKind() == VFGNode::FPIN || vNode->getNodeKind() == VFGNode::FPOUT || vNode->getNodeKind() == VFGNode::APIN || vNode->getNodeKind() == VFGNode::APOUT)
+                        {
                             continue;
                         }
                         std::vector<KBBContext> kbb_contexts;
@@ -359,14 +469,17 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                         }
                         if (vNode->getNodeKind() != VFGNode::Addr)
                         {
-                            const llvm::BasicBlock* bb = vNode->getICFGNode()->getBB();
-                            if (bb != succNode->getICFGNode()->getBB())
+                            if (!(vNode->getNodeKind() == VFGNode::FPIN || vNode->getNodeKind() == VFGNode::FPOUT || vNode->getNodeKind() == VFGNode::APIN || vNode->getNodeKind() == VFGNode::APOUT))
                             {
-                                for (auto kbb_c = kbb_contexts.begin(); kbb_c != kbb_contexts.end(); kbb_c++)
+                                const llvm::BasicBlock* bb = vNode->getICFGNode()->getBB();
+                                if (bb != succNode->getICFGNode()->getBB())
                                 {
-                                    if (find((*kbb_c).begin(), (*kbb_c).end(), bb) == (*kbb_c).end())
-                                        (*kbb_c).push_back(bb);
-                                    svfg_nodes_with_context[succNode].push_back(*kbb_c);
+                                    for (auto kbb_c = kbb_contexts.begin(); kbb_c != kbb_contexts.end(); kbb_c++)
+                                    {
+                                        if (find((*kbb_c).begin(), (*kbb_c).end(), bb) == (*kbb_c).end())
+                                            (*kbb_c).push_back(bb);
+                                        svfg_nodes_with_context[succNode].push_back(*kbb_c);
+                                    }
                                 }
                             }
                         }
@@ -408,12 +521,14 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
                     if (op_type == -1)
                         op_type = KeyOperation::READ;
 
+
                     const llvm::BasicBlock* bb = (vit->first)->getICFGNode()->getBB();
 
 
-                    // [TODO]: 暂时只关注deliver里的msg变量
+                    // [TODO]: 暂时只关注deliver里的msg变量以及msg的定义的位置（用于检查是否是其他的send_connack等）
                     if (taint_var->varType == "Msg" && op_type != KeyOperation::DELIVER)
                         continue;
+
 
                     if (SKBBS.find(bb) == SKBBS.end())
                     {
@@ -473,8 +588,10 @@ void PTA::TraverseOnVFG(KeyVariable* taint_var, llvm::Value* taint_value, std::m
     }
 }
 
+
+
 // return false: the vNode should not be added to the worklist
-bool PTA::PTAConstraint(KeyVariable* taint_var, llvm::Value* taint_value, VFGNode* vNode)
+bool PTA::PTAConstraint(KeyVariable* taint_var, llvm::Value* taint_value, const VFGNode* vNode)
 {
     bool        ret = false;
     llvm::Type* taint_value_type = taint_value->getType();
@@ -663,6 +780,7 @@ int PTA::IdentifyOperationType(const llvm::Instruction* I, const Value* V, Set<c
         if (pts_set.find(RightV) != pts_set.end())
         {
             // Link w- operation or store null
+            // [TODO] 完善operation type的类型判断
             if (llvm::ConstantPointerNull::classof(leftV) || pts_set.find(leftV) != pts_set.end())
             {
                 return KeyOperation::WRITE;
