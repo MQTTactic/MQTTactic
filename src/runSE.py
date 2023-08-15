@@ -114,4 +114,6 @@ def multiProcess():
 
 
 if __name__ == "__main__":
+    if not os.path.exists(f"{BASE_DIR}/ModelCheck/SymbolicExecutionResults/"):
+        os.mkdir(f"{BASE_DIR}/ModelCheck/SymbolicExecutionResults/")
     ModelGenerator(f"{BASE_DIR}/CFGPass")
