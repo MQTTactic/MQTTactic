@@ -270,7 +270,6 @@ public:
             //     dbgs() << "->" << _f;
             // dbgs() << "\n";
         }
-        assert(1 == 2);
 
         return false;
     }
