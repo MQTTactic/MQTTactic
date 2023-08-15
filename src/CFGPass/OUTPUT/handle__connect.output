@@ -1,0 +1,320 @@
+Analyzing Function: _ZN10MqttPacket13handleConnectEv
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%2
+Call:[]
+  %3 = alloca i32, align 4
+  %4 = alloca %class.Client*, align 8
+  %5 = alloca %class.MqttPacket*, align 8
+  %6 = alloca i8*
+  %7 = alloca i32
+  %8 = alloca %"class.std::exception"*, align 8
+  store %class.Client* %0, %class.Client** %4, align 8, !tbaa !49080
+  call void @llvm.dbg.declare(metadata %class.Client** %4, metadata !82673, metadata !DIExpression()), !dbg !82676
+  store %class.MqttPacket* %1, %class.MqttPacket** %5, align 8, !tbaa !49080
+  call void @llvm.dbg.declare(metadata %class.MqttPacket** %5, metadata !82674, metadata !DIExpression()), !dbg !82677
+  %9 = load %class.Client*, %class.Client** %4, align 8
+  %10 = load %class.MqttPacket*, %class.MqttPacket** %5, align 8, !dbg !49086, !tbaa !49080
+deliver-----        return this->writeMqttPacket(packet);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%21
+Call:[_ZN10ThreadData18removeClientQueuedEi, ]
+  %22 = bitcast %"class.std::exception"** %8 to i8*, !dbg !49091
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %22) #15, !dbg !49091
+  call void @llvm.dbg.declare(metadata %"class.std::exception"** %8, metadata !82675, metadata !DIExpression()), !dbg !82684
+  %23 = load i8*, i8** %6, align 8, !dbg !49091
+  %24 = call i8* @__cxa_begin_catch(i8* %23) #15, !dbg !49091
+  %25 = bitcast i8* %24 to %"class.std::exception"*, !dbg !49091
+  store %"class.std::exception"* %25, %"class.std::exception"** %8, align 8, !dbg !49091
+  %26 = getelementptr inbounds %class.Client, %class.Client* %9, i32 0, i32 26, !dbg !49093
+  %27 = bitcast %"class.std::shared_ptr"* %26 to %"struct.std::default_delete"*, !dbg !49093
+  %28 = call %class.ThreadData* @_ZNKSt19__shared_ptr_accessI10ThreadDataLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %27) #15, !dbg !49093
+  %29 = getelementptr inbounds %class.Client, %class.Client* %9, i32 0, i32 0, !dbg !49095
+  %30 = load i32, i32* %29, align 8, !dbg !49095, !tbaa !49096
+  invoke void @_ZN10ThreadData18removeClientQueuedEi(%class.ThreadData* %28, i32 %30)
+          to label %31 unwind label %34, !dbg !49116
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10ThreadData18removeClientQueuedEi:%72
+Call:[]
+deliver_to_subscribers-----            this->removeQueuedClients();
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%210
+Call:[]
+  %211 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49222
+  %212 = bitcast %"class.std::weak_ptr"* %211 to %"struct.std::default_delete"*, !dbg !49222
+  %213 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %212) #15, !dbg !49222
+deliver-----            sender->writeMqttPacket(response);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%582
+Call:[]
+  %583 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49393
+  %584 = bitcast %"class.std::weak_ptr"* %583 to %"struct.std::default_delete"*, !dbg !49393
+  %585 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %584) #15, !dbg !49393
+deliver-----            sender->writeMqttPacket(response);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%672
+Call:[]
+  %673 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49458
+  %674 = bitcast %"class.std::weak_ptr"* %673 to %"struct.std::default_delete"*, !dbg !49458
+  %675 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %674) #15, !dbg !49458
+deliver-----            sender->writeMqttPacket(response);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%835
+Call:[]
+  %836 = bitcast %class.ConnAck* %76 to i8*, !dbg !49539
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %836) #15, !dbg !49539
+  call void @llvm.dbg.declare(metadata %class.ConnAck* %76, metadata !157942, metadata !DIExpression()), !dbg !158314
+  %837 = load i8, i8* %75, align 1, !dbg !49541, !tbaa !49242, !range !49246
+  %838 = trunc i8 %837 to i1, !dbg !49541
+send__connack-----            ConnAck connAck(ConnAckReturnCodes::Accepted, sessionPresent);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%841
+Call:[]
+  %842 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49544
+  %843 = bitcast %"class.std::weak_ptr"* %842 to %"struct.std::default_delete"*, !dbg !49544
+  %844 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %843) #15, !dbg !49544
+deliver-----            sender->writeMqttPacket(response);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%855
+Call:[_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE, ]
+  call void @_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEED2Ev(%"class.std::__cxx11::basic_string"* %78) #15, !dbg !49546
+  %856 = bitcast %"class.std::__cxx11::basic_string"* %78 to i8*, !dbg !49546
+  call void @llvm.lifetime.end.p0i8(i64 32, i8* %856) #15, !dbg !49546
+  %857 = bitcast %"class.std::shared_ptr.5"* %8 to %"struct.std::default_delete"*, !dbg !49551
+  %858 = call %class.SubscriptionStore* @_ZNKSt19__shared_ptr_accessI17SubscriptionStoreLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %857) #15, !dbg !49551
+  %859 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49552
+  invoke void @_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE(%class.SubscriptionStore* %858, %"class.std::weak_ptr"* dereferenceable(16) %859)
+          to label %860 unwind label %875, !dbg !49553
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10MqttPacket13handleConnectEv:%912
+Call:[]
+  %913 = getelementptr inbounds %class.MqttPacket, %class.MqttPacket* %86, i32 0, i32 7, !dbg !49566
+  %914 = bitcast %"class.std::weak_ptr"* %913 to %"struct.std::default_delete"*, !dbg !49566
+  %915 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %914) #15, !dbg !49566
+deliver-----            sender->writeMqttPacket(response);
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%30
+Call:[]
+deliver_to_subscribers-----        this->removeQueuedClients();
+  %31 = bitcast %"class.std::_Bind.217"* %10 to i8*, !dbg !49110
+  call void @llvm.lifetime.start.p0i8(i64 24, i8* %31) #15, !dbg !49110
+  call void @llvm.dbg.declare(metadata %"class.std::_Bind.217"* %10, metadata !162611, metadata !DIExpression()), !dbg !162633
+  %32 = bitcast { i64, i64 }* %11 to i8*, !dbg !49112
+  call void @llvm.lifetime.start.p0i8(i64 16, i8* %32) #15, !dbg !49112
+  store { i64, i64 } { i64 ptrtoint (void (%class.ThreadData*)* @_ZN10ThreadData19removeQueuedClientsEv to i64), i64 0 }, { i64, i64 }* %11, align 8, !dbg !49112, !tbaa !49113
+  %33 = bitcast %class.ThreadData** %12 to i8*, !dbg !49114
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %33) #15, !dbg !49114
+  store %class.ThreadData* %16, %class.ThreadData** %12, align 8, !dbg !49114, !tbaa !49086
+  call void @_ZSt4bindIM10ThreadDataFvvEJPS0_EENSt12_Bind_helperIXsr15__is_socketlikeIT_EE5valueES5_JDpT0_EE4typeEOS5_DpOS6_(%"class.std::_Bind.217"* sret %10, { i64, i64 }* dereferenceable(16) %11, %class.ThreadData** dereferenceable(8) %12), !dbg !49115
+  %34 = bitcast %class.ThreadData** %12 to i8*, !dbg !49115
+  call void @llvm.lifetime.end.p0i8(i64 8, i8* %34) #15, !dbg !49115
+  %35 = bitcast { i64, i64 }* %11 to i8*, !dbg !49115
+  call void @llvm.lifetime.end.p0i8(i64 16, i8* %35) #15, !dbg !49115
+  %36 = bitcast %"class.std::lock_guard"* %13 to i8*, !dbg !49116
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %36) #15, !dbg !49116
+  call void @llvm.dbg.declare(metadata %"class.std::lock_guard"* %13, metadata !162614, metadata !DIExpression()), !dbg !162638
+  %37 = getelementptr inbounds %class.ThreadData, %class.ThreadData* %16, i32 0, i32 20, !dbg !49118
+  call void @_ZNSt10lock_guardISt5mutexEC2ERS0_(%"class.std::lock_guard"* %13, %"class.std::mutex"* dereferenceable(40) %37), !dbg !49117
+  %38 = getelementptr inbounds %class.ThreadData, %class.ThreadData* %16, i32 0, i32 21, !dbg !49119
+  %39 = bitcast %"class.std::function"* %14 to i8*, !dbg !49120
+  call void @llvm.lifetime.start.p0i8(i64 32, i8* %39) #15, !dbg !49120
+  %40 = bitcast %"class.std::_Bind.217"* %15 to i8*, !dbg !49120
+  %41 = bitcast %"class.std::_Bind.217"* %10 to i8*, !dbg !49120
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 8 %40, i8* align 8 %41, i64 24, i1 false), !dbg !49120
+  invoke void @_ZNSt8functionIFvvEEC2ISt5_BindIFM10ThreadDataFvvEPS4_EEvvEET_(%"class.std::function"* %14, %"class.std::_Bind.217"* %15)
+          to label %42 unwind label %54, !dbg !49120
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:%122
+Call:[_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE, ]
+  %123 = bitcast %"class.std::shared_ptr"* %18 to %"struct.std::default_delete"*, !dbg !49191
+  %124 = call %class.ThreadData* @_ZNKSt19__shared_ptr_accessI10ThreadDataLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %123) #15, !dbg !49191
+  invoke void @_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE(%class.ThreadData* %124, %"class.std::weak_ptr"* dereferenceable(16) %15)
+          to label %125 unwind label %157, !dbg !49193
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:%209
+Call:[_ZN7Session22sendPendingQosMessagesEv, ]
+  %210 = bitcast i64* %19 to i8*, !dbg !49227
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %210) #15, !dbg !49227
+  call void @llvm.dbg.declare(metadata i64* %19, metadata !162917, metadata !DIExpression()), !dbg !163013
+  %211 = bitcast %"class.std::shared_ptr.276"* %12 to %"struct.std::default_delete"*, !dbg !49229
+  %212 = call %class.Session* @_ZNKSt19__shared_ptr_accessI7SessionLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %211) #15, !dbg !49229
+  %213 = invoke i64 @_ZN7Session22sendPendingQosMessagesEv(%class.Session* %212)
+          to label %214 unwind label %229, !dbg !49230
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN7Session22sendPendingQosMessagesEv:%57
+Call:[_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket, ]
+  %58 = bitcast %"class.std::shared_ptr.210"** %11 to i8*, !dbg !49120
+  call void @llvm.lifetime.start.p0i8(i64 8, i8* %58) #15, !dbg !49120
+  call void @llvm.dbg.declare(metadata %"class.std::shared_ptr.210"** %11, metadata !163087, metadata !DIExpression()), !dbg !163115
+  %59 = call dereferenceable(16) %"class.std::shared_ptr.210"* @_ZNKSt20_List_const_iteratorISt10shared_ptrI10MqttPacketEEdeEv(%"struct.std::_List_iterator.270"* %9) #15, !dbg !49122
+  store %"class.std::shared_ptr.210"* %59, %"class.std::shared_ptr.210"** %11, align 8, !dbg !49121, !tbaa !49098
+  %60 = bitcast %"class.std::weak_ptr"* %4 to %"struct.std::default_delete"*, !dbg !49123
+  %61 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %60) #15, !dbg !49123
+  %62 = load %"class.std::shared_ptr.210"*, %"class.std::shared_ptr.210"** %11, align 8, !dbg !49125, !tbaa !49098
+  %63 = bitcast %"class.std::shared_ptr.210"* %62 to %"class.std::__shared_ptr.211"*, !dbg !49125
+  %64 = call %class.MqttPacket* @_ZNKSt12__shared_ptrI10MqttPacketLN9__gnu_cxx12_Lock_policyE2EE3getEv(%"class.std::__shared_ptr.211"* %63) #15, !dbg !49126
+  %65 = invoke i32 @_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket(%class.Client* %61, %class.MqttPacket* dereferenceable(184) %64)
+          to label %66 unwind label %77, !dbg !49127
+/*------------------------------KEY BASIC BLOCKS---------------------------------*/
+_ZN7Session22sendPendingQosMessagesEv:%112
+Call:[_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket, ]
+  %113 = bitcast %"class.std::weak_ptr"* %4 to %"struct.std::default_delete"*, !dbg !49148
+  %114 = call %class.Client* @_ZNKSt19__shared_ptr_accessI6ClientLN9__gnu_cxx12_Lock_policyE2ELb0ELb0EEptEv(%"struct.std::default_delete"* %113) #15, !dbg !49148
+  %115 = invoke i32 @_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket(%class.Client* %114, %class.MqttPacket* dereferenceable(184) %17)
+          to label %116 unwind label %133, !dbg !49149
+
+_ZN10MqttPacket13handleConnectEv:
+_ZN10MqttPacket13handleConnectEv ---> %210:8
+_ZN10MqttPacket13handleConnectEv ---> %582:192
+_ZN10MqttPacket13handleConnectEv ---> %672:720
+_ZN10MqttPacket13handleConnectEv ---> %835:47520
+_ZN10MqttPacket13handleConnectEv ---> %841:0
+_ZN10MqttPacket13handleConnectEv ---> %855:0
+_ZN10MqttPacket13handleConnectEv ---> %912:15840
+_ZN10MqttPacket13handleConnectEv ---> RETURN:0
+%210 ---> RETURN:2
+%582 ---> RETURN:2
+%672 ---> RETURN:2
+%835 ---> RETURN:0
+%841 ---> RETURN:0
+%855 ---> RETURN:2
+%912 ---> RETURN:4
+%210 ---> %582:0
+%210 ---> %672:0
+%210 ---> %835:0
+%210 ---> %841:0
+%210 ---> %855:0
+%210 ---> %912:0
+%582 ---> %672:0
+%582 ---> %835:0
+%582 ---> %841:0
+%582 ---> %855:0
+%582 ---> %912:0
+%672 ---> %835:0
+%672 ---> %841:0
+%672 ---> %855:0
+%672 ---> %912:0
+%835 ---> %841:1
+%835 ---> %855:0
+%835 ---> %912:0
+%841 ---> %855:1
+%841 ---> %912:0
+%855 ---> %912:0
+
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE ---> %30:1
+_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE ---> RETURN:1
+%30 ---> RETURN:1
+
+_ZN10ThreadData18removeClientQueuedEi:
+_ZN10ThreadData18removeClientQueuedEi ---> %72:2
+_ZN10ThreadData18removeClientQueuedEi ---> RETURN:4
+%72 ---> RETURN:1
+
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE ---> %122:1
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE ---> %209:12
+_ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE ---> RETURN:0
+%122 ---> RETURN:0
+%209 ---> RETURN:1
+%122 ---> %209:4
+
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket ---> %2:1
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket ---> %21:1
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket ---> RETURN:1
+%2 ---> RETURN:1
+%21 ---> RETURN:1
+%2 ---> %21:1
+
+_ZN7Session22sendPendingQosMessagesEv:
+_ZN7Session22sendPendingQosMessagesEv ---> %57:1
+_ZN7Session22sendPendingQosMessagesEv ---> %112:1
+_ZN7Session22sendPendingQosMessagesEv ---> RETURN:2
+%57 ---> RETURN:1
+%112 ---> RETURN:1
+%57 ---> %112:1
+
+Possible keyBBs on the path:
+☐ _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:%30
+☑ _ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE:RETURN
+
+Type 0
+with 1 paths
+
+Type 1
+with 1 paths
+
+Possible keyBBs on the path:
+☐ _ZN10ThreadData18removeClientQueuedEi:%72
+☑ _ZN10ThreadData18removeClientQueuedEi:RETURN
+
+Type 0
+with 4 paths
+
+Type 1
+with 2 paths
+
+Possible keyBBs on the path:
+☐ _ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:%122
+    call:_ZN10ThreadData18removeClientQueuedERKSt10shared_ptrI6ClientE
+☐ _ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:%209
+    call:_ZN7Session22sendPendingQosMessagesEv
+☑ _ZN17SubscriptionStore32registerClientAndKickExistingOneERSt10shared_ptrI6ClientE:RETURN
+
+Type 0
+with 12 paths
+
+Type 1
+with 4 paths
+
+Possible keyBBs on the path:
+☐ _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%2
+☐ _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%21
+    call:_ZN10ThreadData18removeClientQueuedEi
+☑ _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:RETURN
+
+Type 0
+with 1 paths
+
+Type 1
+with 1 paths
+
+Type 2
+with 1 paths
+
+Type 3
+with 1 paths
+
+Possible keyBBs on the path:
+☐ _ZN7Session22sendPendingQosMessagesEv:%57
+    call:_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket
+☐ _ZN7Session22sendPendingQosMessagesEv:%112
+    call:_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket
+☑ _ZN7Session22sendPendingQosMessagesEv:RETURN
+
+Type 0
+with 2 paths
+
+Type 1
+with 1 paths
+
+Type 2
+with 1 paths
+
+Type 3
+with 1 paths
+
+END: _ZN10MqttPacket13handleConnectEv:%835
+
+Possible keyBBs on the path:
+☐ _ZN10MqttPacket13handleConnectEv:%210
+☐ _ZN10MqttPacket13handleConnectEv:%582
+☐ _ZN10MqttPacket13handleConnectEv:%672
+☑ _ZN10MqttPacket13handleConnectEv:%835
+☐ _ZN10MqttPacket13handleConnectEv:%841
+☐ _ZN10MqttPacket13handleConnectEv:%855
+☐ _ZN10MqttPacket13handleConnectEv:%912
+☑ _ZN10MqttPacket13handleConnectEv:RETURN
+
+Type 0
+with 95040 paths

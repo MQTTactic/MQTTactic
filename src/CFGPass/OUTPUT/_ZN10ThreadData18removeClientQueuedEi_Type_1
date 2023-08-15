@@ -1,0 +1,2 @@
+* _ZN10ThreadData18removeClientQueuedEi:%2 ----> _ZN10ThreadData18removeClientQueuedEi:%72
+* _ZN10ThreadData18removeClientQueuedEi:%72 ----> _ZN10ThreadData18removeClientQueuedEi:RETURN

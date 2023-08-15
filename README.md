@@ -15,13 +15,15 @@ We provide the detailed technical guidance and examples for LLVM IR generation o
     The MQTTactic works on LLVM IR, So LLVM must be available in your system. Currently, We use LLVM-14 currently.
 
 ```
-$ sudo apt install gcc-10 g++-10 python3 python3-distutils zlib1g-dev unzip cmake  nodejs ninja-build unzip
+$ sudo apt install gcc-10 g++-10 python3 python3-distutils zlib1g-dev unzip cmake  nodejs ninja-build
 ```
 
 1.  RELEASE version
 
 ```
 $ wget https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$ unzip clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$ export LLVM_DIR=/root/Document/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04
 ```
 
 2.  DEBUG version
@@ -37,7 +39,6 @@ $ cd build && ninja
 *   SVF
 
 ```
-sudo apt-get install zlib1g-dev unzip cmake gcc-10 g++-10 nodejs
 git clone https://github.com/SVF-tools/SVF.git
 cd SVF && git checkout 925fb44a
 export LLVM_DIR=/root/Document/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04
@@ -118,12 +119,8 @@ $ ./configure.sh --shared && cd build && make && make install
 	A simple example can be found in `Include/`.
 * CFG analysis
 ```
-$ clang  -Wl,-znodelete -fno-rtti -fPIC -shared AllFunctions.cpp -o AllFunctions.so
-$ opt -load ./AllFunctions.so -funcs ./complete.bc -enable-new-pm=0 -o complete.bc 2> ./ALLFunctions
-
-
-$ clang  -Wl,-znodelete -fno-rtti -fPIC -shared CFGPass.cpp -o CFGPass.so
-$ opt -load ./CFGPass.so -CFG ./complete.bc -enable-new-pm=0 -o /dev/null 2> OUTPUT/xxx.output
+$ cd src/CFGPass/src
+$ make SCA
 ```
 
 * Symbolic Execution
@@ -151,7 +148,7 @@ Here lie numerous challenges in employing static analysis to extract comprehensi
 
 #### C/C++
 
--   [x] Function Pointers
+-   [ ] Function Pointers
 -   [ ] Virtual Function
 -   [ ] Destructor Function
 

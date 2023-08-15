@@ -1,0 +1,3 @@
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%21-%31
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%31-%33
+_ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%33-%40

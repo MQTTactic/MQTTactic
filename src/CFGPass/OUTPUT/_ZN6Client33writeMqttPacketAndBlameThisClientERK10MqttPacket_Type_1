@@ -1,0 +1,2 @@
+* _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%2 ----> _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%2
+* _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:%2 ----> _ZN6Client33writeMqttPacketAndBlameThisClientERK10MqttPacket:RETURN
