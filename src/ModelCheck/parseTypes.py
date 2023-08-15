@@ -19,7 +19,7 @@ mosquitto_config = {
     "handle__unsubscribe": config["handle__unsubscribe"],
     "handle__connect": config["handle__connect"],
     "handle__disconnect": config["handle__disconnect"],
-    "handle__revoke": config["handle__revoke"]
+    "handle__revoke": config["handle__ACL_revoke"]
 }
 
 output = open("./pathTypes.py", 'w')
