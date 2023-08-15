@@ -100,6 +100,8 @@ $ ./contrib/setup-btor2tools.sh
 
 # Build Boolector
 $ ./configure.sh --shared && cd build && make && make install
+
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{build/lib/}
 ```
 
 

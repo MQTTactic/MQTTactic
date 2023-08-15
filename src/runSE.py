@@ -38,18 +38,38 @@ def runSE(type, handler, sub_cond, entry_func, bc):
                                  stdout=f,
                                  stderr=subprocess.STDOUT)
         popen.wait()
-        print(f"{handler} Type-{type}_{sub_cond} Done")
+        print(f"{handler} Type-{type} Done")
 
+def runSE_2(type, handler, entry_func, bc):
+    tyPath = f'{BASE_DIR}/CFGPass/OUTPUT/PATHS/{handler}/Type-{type}'
+    if (os.path.exists(tyPath)):
+        if not os.path.exists(f"{BASE_DIR}/ModelCheck/SymbolicExecutionResults/" + handler):
+            os.mkdir(f"{BASE_DIR}/ModelCheck/SymbolicExecutionResults/" + handler)
+        f = open(f'{BASE_DIR}/ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}.log', 'w')
+        # f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}.log', 'w')
+        # f = open(f'../../ModelCheck/SymbolicExecutionResults/{handler}/Type-{type}_qos0_retained.log', 'w')
+        popen = subprocess.Popen([f"{BASE_DIR}/CFGPass/bin/SE", handler, entry_func,
+                                  str(type), f"{BASE_DIR}/CFGPass/", bc],
+                                 stdout=f,
+                                 stderr=subprocess.STDOUT)
+        popen.wait()
+        print(f"{handler} Type-{type} Done")
 
 def ModelGenerator(bc_dir):
-    # for h in handlers:
-    #     if(handlers[h] != ()):
-    #         for sub_cond in handlers[h]:
-    #             runSE()
     for sub_cond in handlers["handle__publish"]:
         for t in range(8):
             runSE(t, "handle__publish", sub_cond, "_ZN10MqttPacket13handlePublishEv", f"{bc_dir}/FlashMQ_{sub_cond}.bc")
-    pass
+    for t in range(8):
+            runSE_2(t, "handle__pubrel", "_ZN10MqttPacket12handlePubRelEv", f"{bc_dir}/FlashMQ_qos0.bc")
+    for t in range(18):
+            runSE_2(t, "handle__subscribe", "_ZN10MqttPacket15handleSubscribeEv", f"{bc_dir}/FlashMQ_qos0.bc")
+    for sub_cond in handlers["handle__connect"]:
+        for t in range(48):
+            runSE(t, "handle__connect", sub_cond, "_ZN10MqttPacket13handleConnectEv", f"{bc_dir}/FlashMQ_{sub_cond}.bc")
+    for t in range(2):
+            runSE_2(t, "handle__disconnect", "_ZN10MqttPacket16handleDisconnectEv", f"{bc_dir}/FlashMQ_qos0.bc")
+    for t in range(3):
+            runSE_2(t, "handle__unsubscribe", "_ZN10MqttPacket17handleUnsubscribeEv", f"{bc_dir}/FlashMQ_qos0.bc")
 
 def run(type):
     global process, handler
