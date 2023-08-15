@@ -63,14 +63,6 @@ export C_INCLUDE_PATH=$LLVM_DIR/include:$SVF_DIR/include:$Z3_DIR/include:$Z3_DIR
 
 
 
-
-
-  * Haybale for symbolic execution<br>
-
-```
-$ git clone https://github.com/MQTTactic/Haybale
-```
-
 *   Cargo
 
 ```
@@ -126,7 +118,7 @@ $ make SCA
 * Symbolic Execution
 ```
 $ cd SymbolicExecution/ && cargo build
-$ cd target/debug/
+$ cp target/debug/SE ../../../CFGPass/bin
 $ ./SE "handle__pubrel" "{config_handle__pubrel}" "{type_num}" "{LLVM_bitcode_dir}" > ModelCheck/SymbolicExecutionResults/handle__pubrel/Type-{type_num}.log 2>&1
 ```
 
