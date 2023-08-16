@@ -120,7 +120,7 @@ $ make SCA
 * Symbolic Execution
 ```
 $ cd src/SymbolicExecution/ && cargo build
-$ cp target/debug/SE ../../../CFGPass/bin
+$ cp target/debug/SE ../../src/CFGPass/bin/
 $ cd ../ && python3 runSE.py
 ```
 
