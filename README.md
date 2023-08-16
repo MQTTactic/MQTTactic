@@ -113,7 +113,7 @@ $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{build/lib/}
 	A simple example can be found in `Include/`.
 * CFG analysis
 ```
-$ cd src/CFGPass/src
+$ cd src/CFGPass
 $ make SCA
 ```
 
