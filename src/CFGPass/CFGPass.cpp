@@ -156,11 +156,16 @@ namespace
                         std::string calledFuncName = "";
                         if (call->isIndirectCall() || !(call->getCalledFunction()))
                         {
-                            const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                            if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                                calledFuncName = GV->getAliasee()->getName();
-                            else
-                                break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                         }
                         else
                         {
@@ -178,11 +183,16 @@ namespace
                         std::string calledFuncName = "";
                         if (call->isIndirectCall() || !(call->getCalledFunction()))
                         {
-                            const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                            if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                                calledFuncName = GV->getAliasee()->getName();
-                            else
-                                break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                         }
                         else
                         {
@@ -212,11 +222,16 @@ namespace
                         std::string calledFuncName = "";
                         if (call->isIndirectCall() || !(call->getCalledFunction()))
                         {
-                            const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                            if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                                calledFuncName = GV->getAliasee()->getName();
-                            else
-                                break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                         }
                         else
                         {
@@ -273,11 +288,16 @@ namespace
                         std::string calledFuncName = "";
                         if (call->isIndirectCall() || !(call->getCalledFunction()))
                         {
-                            const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                            if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                                calledFuncName = GV->getAliasee()->getName();
-                            else
-                                break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                         }
                         else
                         {
@@ -890,11 +910,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                  Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -921,11 +946,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -1026,11 +1056,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -1054,11 +1089,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -1122,11 +1162,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                         Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -1144,11 +1189,16 @@ namespace
                     std::string calledFuncName = "";
                     if (call->isIndirectCall() || !(call->getCalledFunction()))
                     {
-                        const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                        if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                            calledFuncName = GV->getAliasee()->getName();
-                        else
-                            break;
+                 Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                     }
                     else
                     {
@@ -1218,11 +1268,16 @@ namespace
                 std::string calledFuncName = "";
                 if (call->isIndirectCall() || !(call->getCalledFunction()))
                 {
-                    const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                    if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                        calledFuncName = GV->getAliasee()->getName();
-                    else
-                        break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                 }
                 else
                 {
@@ -1304,11 +1359,16 @@ namespace
                 std::string calledFuncName = "";
                 if (call->isIndirectCall() || !(call->getCalledFunction()))
                 {
-                    const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-                    if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                        calledFuncName = GV->getAliasee()->getName();
-                    else
-                        break;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    break;
                 }
                 else
                 {
@@ -1670,11 +1730,16 @@ namespace
         std::string funcName = "";
         if (call->isIndirectCall() || !(call->getCalledFunction()))
         {
-            const GlobalAlias *GV = dyn_cast<GlobalAlias>(call->getCalledValue());
-            if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                funcName = GV->getAliasee()->getName();
-            else
-                return 0;
+                Function*          ptrFunc = dyn_cast<llvm::Function>(call->getCalledOperand()->stripPointerCastsAndAliases());
+                const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
+                if (ptrFunc)
+                {
+                    calledFuncName = ptrFunc->getName().str();
+                }
+                else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
+                    calledFuncName = GV->getAliasee()->getName().str();
+                else
+                    return 0;
         }
         else
         {
