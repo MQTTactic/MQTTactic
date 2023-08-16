@@ -31,6 +31,9 @@ opt -load ./CFGPass.so -CFG ./mosquitto.bc -o /dev/null 2> handle__publish.outpu
 
 using namespace llvm;
 
+// Here we register the pass arguments
+cl::opt<string> Handler("Handler", cl::desc("Specify handler"), cl::Required);
+
 namespace
 {
     class CFGPass : public ModulePass
@@ -120,6 +123,7 @@ namespace
                 }
             }
             infile.close();
+            handlerName = Handler.c_str();
         }
         void getAnalysisUsage(AnalysisUsage &AU) const override
         {
