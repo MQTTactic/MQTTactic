@@ -22,7 +22,7 @@ $ sudo apt install gcc-10 g++-10 python3 python3-distutils zlib1g-dev unzip cmak
 
 ```
 $ wget https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
-$ unzip clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+$ tar xvf clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
 $ export LLVM_DIR=/root/Document/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04
 ```
 
