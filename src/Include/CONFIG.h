@@ -1,26 +1,25 @@
-using namespace std;
-namespace mqttactic
-{
-static std::string handle__connect = "handle__connect";
-static std::string handle__publish = "handle__publish";
-static std::string handle__pubrel = "handle__pubrel";
-static std::string handle__subscribe = "handle__subscribe";
-static std::string handle__unsubscribe = "handle__unsubscribe";
-static std::string handle__disconnect = "handle__disconnect";
-static std::string handle__authorize = "";
-static string handle__revoke = "";
-static std::string permission_check = "mosquitto_acl_check";
-static std::string Subs = "mosquitto__subhier::subs";
-static std::string RetainedMsg = "mosquitto_db::retains";
-static std::string WillMsg = "mosquitto::will";
-static std::string MsgQue = "mosquitto_msg_data::inflight+mosquitto_msg_data::queued";
-static std::string Msg = "mosquitto__packet::payload";
-static std::string Session = "mosquitto";
-static std::string Permission = "Authentication::aclTree";
-static std::string authorization_pub = "MOSQ_ACL_WRITE";
-static std::string authorization_sub = "MOSQ_ACL_SUBSCRIBE";
-static std::string authorization_read = "MOSQ_ACL_READ";
-static std::string authorization_store = "";
-static std::string authorization_load = "";
 
-}  // namespace mqttactic
+using namespace std;
+
+// handlers
+std::string handle__connect = "_ZN10MqttPacket13handleConnectEv";
+std::string handle__publish = "_ZN10MqttPacket13handlePublishEv";
+std::string handle__pubrel = "_ZN10MqttPacket12handlePubRelEv";
+std::string handle__subscribe = "_ZN10MqttPacket15handleSubscribeEv";
+std::string handle__unsubscribe = "_ZN10MqttPacket17handleUnsubscribeEv";
+std::string handle__disconnect = "_ZN10MqttPacket16handleDisconnectEv";
+std::string handle__ACL_revoke = "";
+// handlers_end
+std::string send__connack = "_ZN7ConnAckC2E18ConnAckReturnCodesb";
+std::string send__puback = "_ZN6PubAckC2Et";
+std::string send__pubrec = "_ZN6PubRecC2Et";
+std::string send__pubcomp = "_ZN7PubCompC2Et";
+std::string send__suback = "_ZN6SubAckC2EtRKNSt7__cxx114listIcSaIcEEE";
+std::string send__unsuback = "_ZN8UnsubAckC2Et";
+// key operations
+std::string acl_check = "_ZN14Authentication8aclCheckERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES7_S7_RKSt6vectorIS5_SaIS5_EE9AclAccesscb";
+std::string deliver_to_subscribers = "_ZN17SubscriptionStore24queuePacketAtSubscribersERKSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS6_EER10MqttPacketb+_ZN10ThreadData19removeQueuedClientsEv";
+std::string deliver = "_ZN6Client15writeMqttPacketERK10MqttPacket";
+std::string sub_add = "_ZN16SubscriptionNode13addSubscriberERKSt10shared_ptrI7SessionEc";
+std::string sub_remove = "_ZN16SubscriptionNode16removeSubscriberERKSt10shared_ptrI7SessionEZN16SubscriptionNode18cleanSubscriptionsEv+_ZN16SubscriptionNode18cleanSubscriptionsEv";
+std::string acl_revoke = "";
