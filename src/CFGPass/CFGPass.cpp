@@ -1734,10 +1734,10 @@ namespace
                 const GlobalAlias* GV = dyn_cast<GlobalAlias>(call->getCalledOperand());
                 if (ptrFunc)
                 {
-                    calledFuncName = ptrFunc->getName().str();
+                    funcName = ptrFunc->getName().str();
                 }
                 else if (GV && GV->getAliasee() && GV->getAliasee()->hasName())
-                    calledFuncName = GV->getAliasee()->getName().str();
+                    funcName = GV->getAliasee()->getName().str();
                 else
                     return 0;
         }
