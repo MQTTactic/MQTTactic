@@ -1,7 +1,7 @@
 .PHONY:clean
 
 
-CFGPass.so: PTA.cpp.o VarAnalysis.cpp.o CFGPass.cpp
+CFGPass.so: CFGPass.cpp
 	clang  -Wl,-znodelete -fno-rtti -fPIC -shared CFGPass.cpp -o CFGPass.so
 
 SCA: CFGPass.so
