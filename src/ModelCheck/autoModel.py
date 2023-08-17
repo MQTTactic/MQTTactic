@@ -205,7 +205,7 @@ class Model:
                         Sessions[Clients[index].clientId].messages[i].origin = -1;
                         i = i + 1;
                     :: else -> break;
-                od;  
+                od;
                 Sessions[Clients[index].clientId].messagesLen = 0;
             :: skip;
         fi;'''
@@ -359,7 +359,7 @@ class Model:
                             insert_pos[insert_code[0] - func_begin_line].append(will_deliver)
                         continue
                     elif (will_flag):
-                        print(colored(f"Error: Bad will message delivery: {c}", "red"))
+                        pass#print(colored(f"Error: Bad will message delivery: {c}", "red"))
                         exit()
                     elif ('authorization_result' in insert_code[1][0]):
                         goto_label = insert_code[1][1]
@@ -602,7 +602,7 @@ class Model:
                                     insert_code = foo(client='index', topic='Sessions[Clients[index].clientId].messages[lastMessage].topic', label=type)
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__pubrel_end'] in op):
@@ -621,7 +621,7 @@ class Model:
                 # 发现这条路径没有终点
                 if (False):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__pubrel : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__pubrel : {path}", "red"))
                 else:
                     handle__pubrel.append((insert, type))
             self.paths['handle__pubrel'] = self.Insert("handle__pubrel", handle__pubrel)
@@ -659,7 +659,7 @@ class Model:
                                     insert_code = self.AuthorizationConnect(client='index', label=type)
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__connect_end'] in op):
@@ -680,7 +680,7 @@ class Model:
                 # 发现这条路径没有connack
                 if (False):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__connect_cleanStartT : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__connect_cleanStartT : {path}", "red"))
                 else:
                     handle__connect_cleanStartT.append((insert, type))
             self.paths['handle__connect_cleanStartT'] = self.Insert("handle__connect_cleanStartT", handle__connect_cleanStartT)
@@ -715,7 +715,7 @@ class Model:
                                     insert_code = self.AuthorizationConnect(client='index', label=type)
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__connect_end'] in op):
@@ -743,7 +743,7 @@ class Model:
                 # 发现这条路径没有connack
                 if (False):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__connect_cleanStartF : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__connect_cleanStartF : {path}", "red"))
                 elif (insert_flag == 0):
                     pass
                 else:
@@ -772,7 +772,7 @@ class Model:
                             if (foo):
                                 insert_code = foo(client='index', topic='t', label=type)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
@@ -793,7 +793,7 @@ class Model:
                             insert.append((self.publish_insert_point['PUBLISH_QoS0_step2'][2], insert_code))
                 # 发现这条publish_qos0路径没有deliver_to_subscribers
                 if (insert_flag == 0):
-                    print(colored(f"Error: error/uncomplete path type of handle__publish_qos0 : {path}", "red"))
+                    pass#print(colored(f"Error: error/uncomplete path type of handle__publish_qos0 : {path}", "red"))
                 else:
                     handle__publish_qos0.append((insert, type))
             self.paths['handle__publish_qos0'] = self.Insert("handle__publish_qos0", handle__publish_qos0)
@@ -815,7 +815,7 @@ class Model:
                             if (foo):
                                 insert_code = foo(client='index', topic='t', label=type)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
@@ -836,7 +836,7 @@ class Model:
                             insert.append((self.publish_insert_point['PUBLISH_QoS1_step2'][2], insert_code))
                 if (insert_flag == 0):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__publish_qos1 : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__publish_qos1 : {path}", "red"))
                 else:
                     handle__publish_qos1.append((insert, type))
             self.paths['handle__publish_qos1'] = self.Insert("handle__publish_qos1", handle__publish_qos1)
@@ -859,7 +859,7 @@ class Model:
                                 if (foo):
                                     insert_code = foo(client='index', topic='t', label=type)
                                 else:
-                                    print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                    pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                     exit()
                             # 在处理qos2时，出现qos1的end，并非是处理本条消息，而是session中保存的其他消息
                             elif (self.config['handle__publish_qos1_end'] in op):
@@ -883,7 +883,7 @@ class Model:
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][2], insert_code))
                     if (insert_flag == 0):
                         # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                        print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
+                        pass#print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
                 elif (len(self.publish_insert_point['PUBLISH_QoS2_step2']) == 2):
@@ -898,7 +898,7 @@ class Model:
                                 if (foo):
                                     insert_code = foo(client='index', topic='t', label=type)
                                 else:
-                                    print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                    pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                     exit()
                             elif (self.config['handle__publish_qos2_end'] in op):
                                 if (not end_flag):
@@ -913,7 +913,7 @@ class Model:
                                 insert.append((self.publish_insert_point['PUBLISH_QoS2_step2'][0], insert_code))
                     if (False):
                         # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                        print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
+                        pass#print(colored(f"Error: can not find the end of handle__publish_qos2 : {path}", "red"))
                     else:
                         handle__publish_qos2.append((insert, type))
             self.paths['handle__publish_qos2'] = self.Insert("handle__publish_qos2", handle__publish_qos2)
@@ -934,7 +934,7 @@ class Model:
                             if (foo):
                                 insert_code = foo(client='index', topic='t', label=type)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__publish_qos1_end'] in op):
@@ -956,7 +956,7 @@ class Model:
                 # 发现这条publish_qos0路径没有deliver
                 if (insert_flag == 0):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: error path type of handle__publish_qos0_retained : {path}", "red"))
+                    pass#print(colored(f"Error: error path type of handle__publish_qos0_retained : {path}", "red"))
                 else:
                     handle__publish_qos0_retained.append((insert, type))
             self.paths['handle__publish_qos0_retained'] = self.Insert("handle__publish_qos0_retained", handle__publish_qos0_retained)
@@ -999,7 +999,7 @@ class Model:
                                     insert_code = foo(client=c, topic=t, label=type)
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__subscribe_end'] in op):
@@ -1023,7 +1023,7 @@ class Model:
                 # 发现这条路径没有终点
                 if (False):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__subscribe : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__subscribe : {path}", "red"))
                 # handle__subscribe没有处理retained message
                 elif (insert_flag == 0 or not sub_flag):
                     pass
@@ -1068,7 +1068,7 @@ class Model:
                                     insert_code = foo(client=c, topic=t, label=type)
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 在处理qos0时，出现qos1，2的end，并非是处理本条消息，而是session中保存的其他消息
                         elif (self.config['handle__unsubscribe_end'] in op):
@@ -1085,7 +1085,7 @@ class Model:
                 # 发现这条路径没有终点
                 if (False):
                     # TODO: 与协议文档不符，需反馈修改BaseModel，暂时只输出
-                    print(colored(f"Error: can not find the end of handle__unsubscribe : {path}", "red"))
+                    pass#print(colored(f"Error: can not find the end of handle__unsubscribe : {path}", "red"))
                 # handle__unsubscribe没有处理retained message
                 elif (not sub_flag):
                     pass
@@ -1119,7 +1119,7 @@ class Model:
                                 else:
                                     acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         # 获取插入的位置
                         if (insert_flag == 0 and self.config['deliver_to_subscribers'] in op):
@@ -1156,7 +1156,7 @@ class Model:
                                     else:
                                         acl_check_stack.append(op)
                             else:
-                                print(colored(f"Error: Bad acl check in path: {path}", "red"))
+                                pass#print(colored(f"Error: Bad acl check in path: {path}", "red"))
                                 exit()
                         if (self.config['acl_revoke'] in op):
                             insert_flag = 1
