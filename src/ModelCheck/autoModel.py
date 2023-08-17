@@ -1210,3 +1210,4 @@ class Model:
 if __name__ == "__main__":
     model = Model('FlashMQ', 'BaseModel/BaseModel.pml', 'ConcreteModel/ConcreteModel.pml')
     model.CompleteModel()
+    print("Saved to ConcreteModel/ConcreteModel.pml")
