@@ -105,6 +105,9 @@ $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{build/lib/}
 ```
 
 
+* Docker Image
+```
+```
 
 
 #### 2. Usage
@@ -234,7 +237,7 @@ do
       :: else -> skip;
     fi;
     j = j + 1;
-  :: else -> 
+  :: else ->
     goto nextClients;
 od;
 
@@ -246,14 +249,14 @@ Listing 7: The model's skeleton code
 ```C
 proctype ProcessSubscriber(short index){
   do
-    :: 
-      atomic{ 
-        // placeholders 
+    ::
+      atomic{
+        // placeholders
         CONNECT_{placeholder}();
       }
-    :: 
+    ::
       atomic{
-        // placeholders 
+        // placeholders
         DISCONNECT_{placeholder}();
       }
     ...
@@ -264,7 +267,7 @@ proctype ProcessSubscriber(short index){
 
 init {
   ...
-  run ProcessPublisher(0);   //Publisher client 1 
+  run ProcessPublisher(0);   //Publisher client 1
   run ProcessSubscriber(1);  //Subscriber client 1
   run ProcessPublisher(2);   //Publisher client 2
 }
@@ -285,9 +288,9 @@ inline DISCONNECT(index){
           :: i_1 < MAXSESSIONS ->
             bool hasSubscription = false;
             j = 0;
-           
+
             ...
-           
+
             do
               :: j < MAXSUBSCRIPTIONS ->
                 if
@@ -297,7 +300,7 @@ inline DISCONNECT(index){
                   :: else -> skip;
                 fi;
                 j = j + 1;
-              :: else -> 
+              :: else ->
                 goto nextClients;
             od;
             if
@@ -305,10 +308,10 @@ inline DISCONNECT(index){
                 Deliver(msg, i_1);
               :: else -> skip;
             fi;
-            
+
           ...
-          
-        od;  
+
+        od;
       :: else -> skip;
     fi;
   }
@@ -475,7 +478,7 @@ revoked.
 
 #### Existing Flaws
 > Y. Jia, L. Xing, Y. Mao, D. Zhao, X. Wang, S. Zhao, and Y. Zhang,"Burglars' IoT Paradise: Understanding and Mitigating Security Risks of General Messaging Protocols on IoT Clouds,” in Proceedings of the 41st IEEE Symposium on Security and Privacy, 2020, pp. 465–481.
-> 
+>
 Jia et al. identified several flaws in different commercial MQTT brokers through manual analyses, Among all the security flaws identified in [1], four of them are authorization-related flaws (our goal), which were also identified by MQTTactic, i.e., Flaw 8: Unauthorized subscription via ClientID hijacking; Flaw 9: Unauthorized trigger of the Retained message; Flaw 10: Un-updated subscription; Flaw 11: Unauthorized trigger of the Will message.
 
 
